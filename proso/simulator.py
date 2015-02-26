@@ -99,3 +99,21 @@ class Simulator:
 
     def _get_data(self, practice, practice_length):
         [(u, p[0], p[2]) for u, ps in practice.iteritems() for p in ps[:practice_length]]
+
+    def to_json(self):
+        return {
+            'practice': self._practice,
+            'practice_all': self._practice_all,
+            'rmse': self._rmse,
+            'rmse_all': self._rmse
+        }
+
+    def load_json(self, json):
+        self._practice = self._convert_dict(json['practice'], int, tuple)
+        self._practice_all = self._convert_dict(json['practice_all'], int, tuple)
+        self._rmse = self._convert_dict(json['rmse'], int, float)
+        self._rmse_all = self._convert_dict(json['rmse_all'], int, float)
+
+    def _convert_dict(self, json_dict, key_type, value_type):
+        return dict(map(lambda (k, v): (key_type(k), value_type(v)), json_dict.items()))
+
