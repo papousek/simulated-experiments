@@ -91,7 +91,7 @@ class Simulator:
         actual = []
         model.reset()
         for u in sorted(self._users.keys()):
-            for item, _, correct, _ in self._users[u]:
+            for item, _, correct, _ in self._practice[u]:
                 predicted.append(model.predict(u, item))
                 model.update(u, item, correct)
                 actual.append(correct)
