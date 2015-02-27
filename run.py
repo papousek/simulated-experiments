@@ -38,6 +38,11 @@ def parser_init():
         dest='output',
         default='png',
         help='extension for the output fles')
+    parser.add_argument(
+        '--skip-cache',
+        action='store_true',
+        dest='skip_cache',
+        help='skip saving the cache')
     return parser
 
 
@@ -69,7 +74,8 @@ def main():
         users,
         items,
         clusters,
-        practice_length=scenario.practice_length())
+        practice_length=scenario.practice_length(),
+        target_probability=scenario.target_probability())
 
     elo_simulator = Simulator(
         optimal_model,
@@ -77,7 +83,8 @@ def main():
         users,
         items,
         clusters,
-        practice_length=scenario.practice_length())
+        practice_length=scenario.practice_length(),
+        target_probability=scenario.target_probability())
 
     cluster_simulator = Simulator(
         optimal_model,
@@ -85,7 +92,8 @@ def main():
         users,
         items,
         clusters,
-        practice_length=scenario.practice_length())
+        practice_length=scenario.practice_length(),
+        target_probability=scenario.target_probability())
 
     wrong_items = random.sample(items.keys(), scenario.number_of_items_with_wrong_cluster())
     wrong_clusters = dict(clusters.items())
@@ -99,7 +107,8 @@ def main():
         users,
         items,
         clusters,
-        practice_length=scenario.practice_length())
+        practice_length=scenario.practice_length(),
+        target_probability=scenario.target_probability())
 
     naive_simulator = Simulator(
         optimal_model,
@@ -107,7 +116,8 @@ def main():
         users,
         items,
         clusters,
-        practice_length=scenario.practice_length())
+        practice_length=scenario.practice_length(),
+        target_probability=scenario.target_probability())
 
     const_simulator = Simulator(
         optimal_model,
@@ -115,7 +125,8 @@ def main():
         users,
         items,
         clusters,
-        practice_length=scenario.practice_length())
+        practice_length=scenario.practice_length(),
+        target_probability=scenario.target_probability())
 
     simulators = {
         'Elo': elo_simulator,
@@ -134,14 +145,19 @@ def main():
         if name not in simulators_cache:
             simulator.simulate()
             simulator.simulate_all()
-            simulators_cache[name] = simulator.to_json()
         else:
             simulator.load_json(simulators_cache[name])
-    scenario.write('simulators', simulators_cache)
     fig = plt.figure()
-    plot_intersections(fig, scenario, simulators)
-    savefig(args, scenario, fig, 'intersections')
-    scenario.save(args.destination)
+    savefig(args, scenario, plot_intersections(fig, scenario, simulators), 'intersections')
+    fig = plt.figure()
+    savefig(args, scenario, plot_rmse(fig, scenario, simulators), 'rmse')
+    fig = plt.figure()
+    savefig(args, scenario, plot_rmse_complex(fig, scenario, simulators), 'rmse_complex')
+    for name, simulator in simulators.iteritems():
+        simulators_cache[name] = simulator.to_json()
+    scenario.write('simulators', simulators_cache)
+    if not args.skip_cache:
+        scenario.save(args.destination)
 
 
 if __name__ == "__main__":

@@ -3,6 +3,7 @@ import hashlib
 from os import path
 import numpy
 import random
+from util import convert_dict
 
 
 def load_scenario(json_file, name, version):
@@ -18,7 +19,6 @@ class Scenario:
         self._data['storage'] = {}
         self._data['train_set'] = {}
         self._data['test_set'] = {}
-        self._loaded = False
 
     def config_hash(self):
         return hashlib.sha1(json.dumps(self._data['config'], sort_keys=True)).hexdigest()
@@ -32,6 +32,9 @@ class Scenario:
     def number_of_clusters(self):
         return self._data['config']['number_of_clusters']
 
+    def number_of_items(self):
+        return self._data['config']['number_of_items']
+
     def number_of_users(self):
         return self._data['config']['number_of_users']
 
@@ -40,7 +43,6 @@ class Scenario:
 
     def write(self, key, value):
         self._data['storage'][key] = value
-        self._loaded = False
 
     def read(self, key):
         return self._data['storage'].get(key)
@@ -50,11 +52,19 @@ class Scenario:
             return
         with open(self.filename(directory) + '.json', 'r') as f:
             self._data = json.loads(f.read())
-            self._loaded = True
+            for storage_key in ['test_set', 'train_set']:
+                storage = self._data[storage_key]
+                for key in ['difficulties']:
+                    if key in storage:
+                        storage[key] = convert_dict(storage[key], int, float)
+                for key in ['skills']:
+                    if key in storage:
+                        storage[key] = convert_dict(storage[key], int, lambda xs: map(float, list(xs)))
+                for key in ['clusters']:
+                    if key in storage:
+                        storage[key] = convert_dict(storage[key], int, int)
 
     def save(self, directory, force=False):
-        if self._loaded and not force:
-            return
         with open(self.filename(directory) + '.json', 'w') as f:
             json.dump(self._data, f)
 

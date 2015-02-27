@@ -1,21 +1,18 @@
 import random
 import numpy
-from util import rmse
+from util import rmse, convert_dict
 
 
-TARGET_PROBABILITY = 0.75
-
-
-def prediction_score(probability, target_probability=TARGET_PROBABILITY):
+def prediction_score(probability, target_probability):
     diff = target_probability - probability
     sign = 1 if diff > 0 else -1
     normed_diff = abs(diff) / max(0.001, abs(target_probability - 0.5 + sign * 0.5))
     return 1 - normed_diff
 
 
-def recommend(items_with_predictions):
+def recommend(items_with_predictions, target_probability):
     scored = map(
-        lambda (i, p): (prediction_score(p), random.random(), i),
+        lambda (i, p): (prediction_score(p, target_probability), random.random(), i),
         items_with_predictions.items())
     return sorted(scored, reverse=True)[0][2]
 
@@ -26,8 +23,9 @@ def recommend_random(items_with_predictions):
 
 class Simulator:
 
-    def __init__(self, optimal_model, model, users, items, clusters, practice_length):
+    def __init__(self, optimal_model, model, users, items, clusters, practice_length, target_probability):
         self._optimal_model = optimal_model
+        self._target_probability = target_probability
         self._model = model
         self._users = users
         self._items = items
@@ -42,7 +40,7 @@ class Simulator:
         self._simulate(
             self._practice,
             self._practice_length,
-            recommend_fun=recommend)
+            recommend_fun=lambda items: recommend(items, self._target_probability))
 
     def simulate_all(self):
         self._simulate(
@@ -109,11 +107,7 @@ class Simulator:
         }
 
     def load_json(self, json):
-        self._practice = self._convert_dict(json['practice'], int, tuple)
-        self._practice_all = self._convert_dict(json['practice_all'], int, tuple)
-        self._rmse = self._convert_dict(json['rmse'], int, float)
-        self._rmse_all = self._convert_dict(json['rmse_all'], int, float)
-
-    def _convert_dict(self, json_dict, key_type, value_type):
-        return dict(map(lambda (k, v): (key_type(k), value_type(v)), json_dict.items()))
-
+        self._practice = convert_dict(json['practice'], int, tuple)
+        self._practice_all = convert_dict(json['practice_all'], int, tuple)
+        self._rmse = convert_dict(json['rmse'], int, float)
+        self._rmse_all = convert_dict(json['rmse_all'], int, float)

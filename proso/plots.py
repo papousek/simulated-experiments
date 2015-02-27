@@ -1,4 +1,4 @@
-from util import window_fun
+from util import window_fun, rmse
 import numpy
 import seaborn as sns
 
@@ -42,3 +42,53 @@ def plot_intersections(plot, scenario, simulators):
     subplot.set_ylabel('Number of Users')
 
     plot.set_size_inches(17, 5)
+    return plot
+
+
+def plot_rmse(plot, scenario, simulators):
+    rmses = scenario.read('plot_rmse__ones')
+    rmses_all = scenario.read('plot_rmse__all')
+    if rmse is None or rmses_all is None:
+        rmses = []
+        rmses_all = []
+        for simulator_name, simulator in simulators.iteritems():
+            rmses.append(simulator.rmse(scenario.practice_length()))
+            rmses_all.append(simulator.rmse_all(scenario.number_of_items()))
+        scenario.write('plot_rmse__ones', rmses)
+        scenario.write('plot_rmse__all', rmses_all)
+    names = map(lambda (n, _): n, simulators.items())
+    index = numpy.arange(len(simulators))
+    bar_width = 0.35
+    subplot = plot.add_subplot(111)
+    subplot.set_xticklabels(names)
+    subplot.bar(index, rmses, bar_width, label='only a limited recommended practice', color=COLORS[0])
+    subplot.bar(index + bar_width, rmses_all, bar_width, label='all', color=COLORS[1])
+    subplot.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+    subplot.set_xlabel('Model')
+    subplot.set_ylabel('RMSE')
+    subplot.set_ylim(0.4, 0.6)
+    return plot
+
+def plot_rmse_complex(plot, scenario, simulators):
+    simulators_rmse = scenario.read('plot_rmse_complex__rmse')
+    if simulators_rmse is None:
+        simulators_rmse = []
+        for simulator_name, simulator in simulators.iteritems():
+            rmse = []
+            for data_name, data_provider in simulators.iteritems():
+                rmse.append(data_provider.replay(simulator._model))
+            simulators_rmse.append(rmse)
+        scenario.write('plot_rmse_complex__rmse', simulators_rmse)
+    index = numpy.arange(len(simulators))
+    bar_width = 0.1
+    subplot = plot.add_subplot(111)
+    names = map(lambda (n, _): n, simulators.items())
+    for i, rmse in enumerate(simulators_rmse):
+        subplot.bar(index + i * bar_width, rmse, bar_width, label=names[i], color=COLORS[i])
+    subplot.set_xticklabels(names)
+    subplot.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+    subplot.set_xlabel('Data Set')
+    subplot.set_ylabel('RMSE')
+    subplot.set_ylim(0.4, 0.6)
+    plot.set_size_inches(17, 5)
+    return plot
