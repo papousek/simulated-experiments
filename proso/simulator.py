@@ -7,7 +7,7 @@ def prediction_score(probability, target_probability):
     diff = target_probability - probability
     sign = 1 if diff > 0 else -1
     normed_diff = abs(diff) / max(0.001, abs(target_probability - 0.5 + sign * 0.5))
-    return 1 - normed_diff
+    return 1 - normed_diff ** 2
 
 
 def recommend(items_with_predictions, target_probability):
