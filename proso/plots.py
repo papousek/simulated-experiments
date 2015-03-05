@@ -110,17 +110,17 @@ def plot_rmse_complex(plot, scenario, simulators):
     if simulators_rmse is None:
         simulators_rmse = []
         for simulator_name, simulator in simulators.iteritems():
-            rmse = []
+            current_rmse = []
             for data_name, data_provider in simulators.iteritems():
                 rmse.append(data_provider.replay(simulator._model))
-            simulators_rmse.append(rmse)
+            simulators_rmse.append(current_rmse)
         scenario.write('plot_rmse_complex__rmse', simulators_rmse)
     index = numpy.arange(len(simulators))
     bar_width = 0.1
     subplot = plot.add_subplot(111)
     names = map(lambda (n, _): n, simulators.items())
-    for i, rmse in enumerate(simulators_rmse):
-        subplot.bar(index + i * bar_width, rmse, bar_width, label=names[i], color=COLORS[i])
+    for i, current_rmse in enumerate(simulators_rmse):
+        subplot.bar(index + i * bar_width, current_rmse, bar_width, label=names[i], color=COLORS[i])
     subplot.set_xticklabels(names)
     subplot.legend(loc='center left', bbox_to_anchor=(1, 0.5))
     subplot.set_xlabel('Data Set')
