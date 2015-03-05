@@ -2,8 +2,6 @@ from argparse import ArgumentParser
 from os import path, makedirs
 import proso.scenario
 from proso.model import *
-from proso.simulator import Simulator
-import random
 from proso.plots import *
 import matplotlib.pyplot as plt
 
@@ -39,6 +37,11 @@ def parser_init():
         default='png',
         help='extension for the output fles')
     parser.add_argument(
+        '--skip-groups',
+        dest='skip_groups',
+        nargs='+',
+        type=str)
+    parser.add_argument(
         '--skip-cache',
         action='store_true',
         dest='skip_cache',
@@ -67,95 +70,35 @@ def main():
     items = scenario.difficulties()
     clusters = scenario.clusters()
 
-    optimal_model = OptimalModel(users, items, clusters)
-    optimal_simulator = Simulator(
-        optimal_model,
-        optimal_model,
-        users,
-        items,
-        clusters,
-        practice_length=scenario.practice_length(),
-        target_probability=scenario.target_probability())
-
-    elo_simulator = Simulator(
-        optimal_model,
-        ClusterEloModel(clusters={}),
-        users,
-        items,
-        clusters,
-        practice_length=scenario.practice_length(),
-        target_probability=scenario.target_probability())
-
-    cluster_simulator = Simulator(
-        optimal_model,
-        ClusterEloModel(clusters=clusters),
-        users,
-        items,
-        clusters,
-        practice_length=scenario.practice_length(),
-        target_probability=scenario.target_probability())
-
-    wrong_items = random.sample(items.keys(), scenario.number_of_items_with_wrong_cluster())
-    wrong_clusters = dict(clusters.items())
-    for i in wrong_items:
-        available_clusters = set(range(scenario.number_of_clusters()))
-        available_clusters.remove(wrong_clusters[i])
-        wrong_clusters[i] = random.choice(list(available_clusters))
-    wrong_cluster_simulator = Simulator(
-        optimal_model,
-        ClusterEloModel(clusters=wrong_clusters),
-        users,
-        items,
-        clusters,
-        practice_length=scenario.practice_length(),
-        target_probability=scenario.target_probability())
-
-    naive_simulator = Simulator(
-        optimal_model,
-        NaiveModel(),
-        users,
-        items,
-        clusters,
-        practice_length=scenario.practice_length(),
-        target_probability=scenario.target_probability())
-
-    const_simulator = Simulator(
-        optimal_model,
-        ConstantModel(constant=scenario.target_probability()),
-        users,
-        items,
-        clusters,
-        practice_length=scenario.practice_length(),
-        target_probability=scenario.target_probability())
-
     simulators = {
-        'Elo': elo_simulator,
-        'Elo, Clusters': cluster_simulator,
-        'Elo, Clusters (wrong)': wrong_cluster_simulator,
-        'Naive': naive_simulator,
-        'Constant': const_simulator,
-        'Optimal': optimal_simulator
+        'Optimal': scenario.init_simulator(args.destination, OptimalModel(users, items, clusters)),
+        'Elo': scenario.init_simulator(args.destination, ClusterEloModel(clusters={})),
+        'Elo, Clusters': scenario.init_simulator(args.destination, ClusterEloModel(clusters=clusters)),
+        'Elo, Clusters (wrong)': scenario.init_simulator(args.destination, ClusterEloModel(clusters=clusters, number_of_items_with_wrong_cluster=scenario.number_of_items_with_wrong_cluster())),
+        'Naive': scenario.init_simulator(args.destination, NaiveModel()),
+        'Constant': scenario.init_simulator(args.destination, ConstantModel(constant=scenario.target_probability()))
     }
-
-    simulators_cache = scenario.read('simulators')
-    if simulators_cache is None:
-        simulators_cache = {}
-    for name, simulator in simulators.iteritems():
-        print ' -- ', name, 'simulating'
-        if name not in simulators_cache:
-            simulator.simulate()
-            simulator.simulate_all()
-        else:
-            simulator.load_json(simulators_cache[name])
     fig = plt.figure()
-    savefig(args, scenario, plot_intersections(fig, scenario, simulators), 'intersections')
-    fig = plt.figure()
-    savefig(args, scenario, plot_rmse(fig, scenario, simulators), 'rmse')
+    savefig(args, scenario, plot_jaccard(fig, scenario, simulators), 'jaccard')
     fig = plt.figure()
     savefig(args, scenario, plot_rmse_complex(fig, scenario, simulators), 'rmse_complex')
-    for name, simulator in simulators.iteritems():
-        simulators_cache[name] = simulator.to_json()
-    scenario.write('simulators', simulators_cache)
+    if args.skip_groups is None or 'fitting' not in args.skip_groups:
+        fig = plt.figure()
+        savefig(args, scenario, plot_model_parameters(
+            fig,
+            scenario,
+            lambda x, y: scenario.init_simulator(args.destination, ClusterEloModel(clusters={}, alpha=x, dynamic_alpha=y)),
+            ('alpha', 0, 1, 11),
+            ('beta', 0.0, 0.1, 11)
+        ), 'elo_parameters')
+        fig = plt.figure()
+        savefig(args, scenario, plot_model_parameters(
+            fig,
+            scenario,
+            lambda x, y: scenario.init_simulator(args.destination, ClusterEloModel(clusters=clusters, alpha=x, dynamic_alpha=y)),
+            ('alpha', 0, 1, 11),
+            ('beta', 0, 0.1, 11)
+        ), 'elo_clusters_parameters')
     if not args.skip_cache:
         scenario.save(args.destination)
 

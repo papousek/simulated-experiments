@@ -4,6 +4,8 @@ from os import path
 import numpy
 import random
 from util import convert_dict
+from model import OptimalModel
+from simulator import Simulator
 
 
 def load_scenario(json_file, name, version):
@@ -19,6 +21,22 @@ class Scenario:
         self._data['storage'] = {}
         self._data['train_set'] = {}
         self._data['test_set'] = {}
+        self._simulators = {}
+
+    def init_simulator(self, directory, model, practice_length=None):
+        simulator = Simulator(
+            OptimalModel(self.skills(), self.difficulties(), self.clusters()),
+            model,
+            self,
+            practice_length=practice_length)
+        simulator_name = str(simulator)
+        found_simulator = self._simulators.get(simulator_name)
+        if found_simulator is None:
+            simulator.load(self.filename(directory))
+            self._simulators[simulator_name] = simulator
+            simulator.save(self.filename(directory))
+            found_simulator = simulator
+        return found_simulator
 
     def config_hash(self):
         return hashlib.sha1(json.dumps(self._data['config'], sort_keys=True)).hexdigest()
@@ -64,9 +82,11 @@ class Scenario:
                     if key in storage:
                         storage[key] = convert_dict(storage[key], int, int)
 
-    def save(self, directory, force=False):
+    def save(self, directory):
         with open(self.filename(directory) + '.json', 'w') as f:
             json.dump(self._data, f)
+        for simulator in self._simulators.values():
+            simulator.save(self.filename(directory))
 
     def skills(self):
         return self._skills(self._data['test_set'])
