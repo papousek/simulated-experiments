@@ -2,6 +2,8 @@ from util import window_fun, rmse
 import numpy
 import seaborn as sns
 import pandas
+import math
+from model import ClusterEloModel
 
 
 COLORS = sns.color_palette()
@@ -27,6 +29,38 @@ def plot_model_parameters(plot, scenario, simulator_factory, parameter_x, parame
         list(numpy.linspace(min_y, max_y, len(subplot.get_yticks()) - 1)) + ['MAX'])
     plot.colorbar(img)
     return plot
+
+
+def plot_wrong_clusters_vs_jaccard(plot, scenario, optimal_simulator, destination, step=5):
+    rmses = []
+    jaccard = []
+    wrong = []
+    for wrong_clusters in xrange(0, int(math.ceil(len(scenario.difficulties()) / 2.0)) + 1, step):
+        simulator = scenario.init_simulator(
+            destination,
+            ClusterEloModel(clusters=scenario.clusters(), number_of_items_with_wrong_cluster=wrong_clusters))
+        user_jaccard = []
+        for u in xrange(scenario.number_of_users()):
+            first_set = set(zip(*optimal_simulator.get_practice()[u])[0])
+            second_set = set(zip(*simulator.get_practice()[u])[0])
+            user_jaccard.append(len(first_set & second_set) / float(len(first_set | second_set)))
+        wrong.append(wrong_clusters)
+        rmses.append(simulator.rmse())
+        jaccard.append(numpy.mean(user_jaccard))
+
+    subplot = plot.add_subplot(121)
+    subplot.plot(wrong, rmses)
+    subplot.set_xlabel('Number of Items with Wrong Cluster')
+    subplot.set_ylabel('RMSE')
+
+    subplot = plot.add_subplot(122)
+    subplot.plot(wrong, jaccard)
+    subplot.set_xlabel('Number of Items with Wrong Cluster')
+    subplot.set_ylabel('Jaccard Similarity Coefficient')
+
+    plot.set_size_inches(17, 5)
+    return plot
+
 
 
 def plot_jaccard(plot, scenario, simulators):
