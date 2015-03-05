@@ -1,3 +1,4 @@
 *.pyc
 data/devel*
+data/*/*.png
 .ipynb_checkpoints
