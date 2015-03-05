@@ -12,6 +12,32 @@
             "practice_length": 50,
             "target_probability": 0.75,
             "number_of_items_with_wrong_cluster": 50
+        },
+        {
+            "name": "devel",
+            "number_of_items": 100,
+            "number_of_users": 10,
+            "number_of_clusters": 2,
+            "skill_mean": 0,
+            "skill_std": 1,
+            "difficulty_mean": 0,
+            "difficulty_std": 1,
+            "practice_length": 50,
+            "target_probability": 0.75,
+            "number_of_items_with_wrong_cluster": 50
+        },
+        {
+            "name": "devel-big",
+            "number_of_items": 100,
+            "number_of_users": 100,
+            "number_of_clusters": 2,
+            "skill_mean": 0,
+            "skill_std": 1,
+            "difficulty_mean": 0,
+            "difficulty_std": 1,
+            "practice_length": 50,
+            "target_probability": 0.75,
+            "number_of_items_with_wrong_cluster": 50
         }
     ]
 }
