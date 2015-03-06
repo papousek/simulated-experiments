@@ -22,8 +22,13 @@ class Scenario:
         self._data['train_set'] = {}
         self._data['test_set'] = {}
         self._simulators = {}
+        self._optimal_simulator = None
+        self._optimal_simulator_saved = False
 
     def init_simulator(self, directory, model, practice_length=None):
+        if not self._optimal_simulator_saved and self._optimal_simulator is not None:
+            self._optimal_simulator.load(self.filename(directory))
+            self._optimal_simulator.save(self.filename(directory))
         simulator = Simulator(
             OptimalModel(self.skills(), self.difficulties(), self.clusters()),
             model,
@@ -37,6 +42,15 @@ class Scenario:
             simulator.save(self.filename(directory))
             found_simulator = simulator
         return found_simulator
+
+    def optimal_simulator(self):
+        if self._optimal_simulator is None:
+            optimal_model = OptimalModel(self.skills(), self.difficulties(), self.clusters())
+            self._optimal_simulator = Simulator(
+                optimal_model,
+                optimal_model,
+                self)
+        return self._optimal_simulator
 
     def config_hash(self):
         return hashlib.sha1(json.dumps(self._data['config'], sort_keys=True)).hexdigest()

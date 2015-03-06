@@ -14,7 +14,7 @@ def plot_number_of_answers(plot, scenario, simulators):
     numbers = []
     subplot = plot.add_subplot(122)
     for simulator_name, simulator in simulators.iteritems():
-        nums = _number_of_answers(scenario, simulator.get_practice()).values()
+        nums = simulator.number_of_answers().values()
         numbers.append(nums)
         names.append(simulator_name)
         subplot.plot(sorted(nums, reverse=True), label=simulator_name)
@@ -60,14 +60,9 @@ def plot_noise_vs_jaccard(plot, scenario, optimal_simulator, destination, std_st
     optimal_model = OptimalModel(scenario.skills(), scenario.difficulties(), scenario.clusters())
     for std in numpy.arange(0, std_max, std_step):
         simulator = scenario.init_simulator(destination, NoiseModel(optimal_model, std))
-        user_jaccard = []
-        for u in xrange(scenario.number_of_users()):
-            first_set = set(zip(*optimal_simulator.get_practice()[u])[0])
-            second_set = set(zip(*simulator.get_practice()[u])[0])
-            user_jaccard.append(len(first_set & second_set) / float(len(first_set | second_set)))
         stds.append(std)
         rmses.append(simulator.rmse())
-        jaccard.append(numpy.mean(user_jaccard))
+        jaccard.append(simulator.jaccard()[0])
 
     subplot = plot.add_subplot(121)
     subplot.plot(stds, rmses)
@@ -91,14 +86,9 @@ def plot_wrong_clusters_vs_jaccard(plot, scenario, optimal_simulator, destinatio
         simulator = scenario.init_simulator(
             destination,
             ClusterEloModel(clusters=scenario.clusters(), number_of_items_with_wrong_cluster=wrong_clusters))
-        user_jaccard = []
-        for u in xrange(scenario.number_of_users()):
-            first_set = set(zip(*optimal_simulator.get_practice()[u])[0])
-            second_set = set(zip(*simulator.get_practice()[u])[0])
-            user_jaccard.append(len(first_set & second_set) / float(len(first_set | second_set)))
         wrong.append(wrong_clusters)
         rmses.append(simulator.rmse())
-        jaccard.append(numpy.mean(user_jaccard))
+        jaccard.append(simulator.jaccard()[0])
 
     subplot = plot.add_subplot(121)
     subplot.plot(wrong, rmses)
@@ -115,9 +105,8 @@ def plot_wrong_clusters_vs_jaccard(plot, scenario, optimal_simulator, destinatio
 
 
 def plot_jaccard(plot, scenario, simulators):
-    intersections_all = scenario.read('plot_jaccard__all')
     jaccard_trends = scenario.read('plot_jaccard__trends')
-    if intersections_all is None or jaccard_trends is None:
+    if jaccard_trends is None:
         intersections_all = []
         jaccard_trends = []
         baseline = simulators['Optimal']
@@ -127,33 +116,16 @@ def plot_jaccard(plot, scenario, simulators):
             jaccard = []
             intersections = []
             for i in xrange(1, scenario.practice_length() + 1):
-                current_jaccard = []
-                current_intersections = []
-                for u in xrange(scenario.number_of_users()):
-                    first_set = set(zip(*baseline.get_practice()[u])[0][:i])
-                    second_set = set(zip(*simulator.get_practice()[u])[0][:i])
-                    current_jaccard.append(len(first_set & second_set) / float(len(first_set | second_set)))
-                    current_intersections.append(len(first_set & second_set))
-                jaccard.append(current_jaccard)
-                intersections.append(current_intersections)
-            intersections_all.append(list(intersections))
-            jaccard_trends.append(window_fun(jaccard, numpy.mean, size=1))
-        scenario.write('plot_jaccard__all', intersections_all)
+                jaccard.append(simulator.jaccard(i)[0])
+            jaccard_trends.append(jaccard)
         scenario.write('plot_jaccard__trends', jaccard_trends)
 
-    subplot = plot.add_subplot(122)
+    subplot = plot.add_subplot(111)
     for i, (simulator_name, _) in enumerate(filter(lambda (n, s): n != 'Optimal', simulators.items())):
         subplot.plot(range(scenario.practice_length()), jaccard_trends[i], label=simulator_name)
     subplot.set_ylabel('Jaccard Similarity Coefficient')
     subplot.set_xlabel('Number of Attempts')
     subplot.legend(loc='center left', bbox_to_anchor=(1, 0.5))
-
-    subplot = plot.add_subplot(121)
-    subplot.hist(map(lambda xs: xs[scenario.practice_length()-1], intersections_all), bins=10)
-    subplot.set_xlabel('Number of Items in Itersection of Practice')
-    subplot.set_ylabel('Number of Users')
-
-    plot.set_size_inches(17, 5)
     return plot
 
 def plot_rmse_complex(plot, scenario, simulators):
@@ -163,7 +135,7 @@ def plot_rmse_complex(plot, scenario, simulators):
         for simulator_name, simulator in simulators.iteritems():
             current_rmse = []
             for data_name, data_provider in simulators.iteritems():
-                rmse.append(data_provider.replay(simulator._model))
+                current_rmse.append(data_provider.replay(simulator._model))
             simulators_rmse.append(current_rmse)
         scenario.write('plot_rmse_complex__rmse', simulators_rmse)
     index = numpy.arange(len(simulators))
@@ -179,12 +151,3 @@ def plot_rmse_complex(plot, scenario, simulators):
     subplot.set_ylim(0.4, 0.6)
     plot.set_size_inches(17, 5)
     return plot
-
-
-def _number_of_answers(scenario, practice):
-    result = dict(map(lambda (i, d): (i, 0), scenario.difficulties().items()))
-    def _reducer(acc, i):
-        acc[i] += 1
-        return acc
-    reduce(_reducer, map(lambda x: x[0], [x for xs in practice.values() for x in xs]), result)
-    return result

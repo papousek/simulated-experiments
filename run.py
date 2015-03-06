@@ -71,7 +71,7 @@ def main():
     clusters = scenario.clusters()
 
     simulators = {
-        'Optimal': scenario.init_simulator(args.destination, OptimalModel(users, items, clusters)),
+        'Optimal': scenario.optimal_simulator(),
         'Elo': scenario.init_simulator(args.destination, ClusterEloModel(clusters={})),
         'Elo, Clusters': scenario.init_simulator(args.destination, ClusterEloModel(clusters=clusters)),
         'Elo, Clusters (wrong)': scenario.init_simulator(args.destination, ClusterEloModel(clusters=clusters, number_of_items_with_wrong_cluster=scenario.number_of_items_with_wrong_cluster())),

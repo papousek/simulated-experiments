@@ -44,6 +44,9 @@ class Simulator:
         self._target_probability = scenario.target_probability()
         self._practice = {}
         self._rmse = {}
+        self._jaccard = {}
+        self._intersection = {}
+        self._number_of_answers = None
         self._scenario = scenario
         self._directory = None
 
@@ -52,6 +55,50 @@ class Simulator:
             self._practice,
             self._practice_length,
             recommend_fun=lambda items: recommend(items, self._target_probability))
+
+    def number_of_answers(self):
+        if self._number_of_answers is None:
+            result = dict(map(lambda (i, d): (i, 0), self._scenario.difficulties().items()))
+            def _reducer(acc, i):
+                acc[i] += 1
+                return acc
+            reduce(
+                _reducer,
+                map(lambda x: x[0], [x for xs in self.get_practice().values() for x in xs]), result)
+            self._number_of_answers = result
+        return self._number_of_answers
+
+    def jaccard(self, practice_length=None):
+        if practice_length is None:
+            practice_length = self._practice_length
+        result = self._jaccard.get(practice_length)
+        if result is None:
+            baseline = self._scenario.optimal_simulator()
+            jaccard = []
+            for u in xrange(self._scenario.number_of_users()):
+                first_set = set(zip(*baseline.get_practice()[u])[0][:practice_length])
+                second_set = set(zip(*self.get_practice()[u])[0][:practice_length])
+                jaccard.append(len(first_set & second_set) / float(len(first_set | second_set)))
+            jaccard_mean, jaccard_std = numpy.mean(jaccard), numpy.std(jaccard)
+            result = {'mean': jaccard_mean, 'std': jaccard_std}
+            self._jaccard[practice_length] = result
+        return result['mean'], result['std']
+
+    def intersection(self, practice_length=None):
+        if practice_length is None:
+            practice_length = self._practice_length
+        result = self._intersection.get(practice_length)
+        if result is None:
+            baseline = self._scenario.optimal_simulator()
+            intersection = []
+            for u in xrange(scenario.number_of_users()):
+                first_set = set(zip(*baseline.get_practice()[u])[0][:practice_length])
+                second_set = set(zip(*self.get_practice()[u])[0][:practice_length])
+                intersection.append(len(first_set & second_set))
+            intersection_mean, intersection_std = numpy.mean(intersection), numpy.std(intersection)
+            result = {'mean': intersection_mean, 'std': intersection_std}
+            self._intersection[practice_length] = result
+        return result['mean'], result['std']
 
     def save(self, directory):
         if not path.exists(directory):
@@ -126,11 +173,19 @@ class Simulator:
         with open(filename, 'r') as f:
             to_json = json.loads(f.read())
             self._rmse = convert_dict(to_json['rmse'], int, float)
+            self._jaccard = convert_dict(to_json['jaccard'], int, dict)
+            self._intersection = convert_dict(to_json['intersection'], int, dict)
+            if 'number_of_answers' in to_json:
+                self._number_of_answers = convert_dict(to_json['number_of_answers'], int, int)
 
     def _save_stats(self, directory):
         to_json = {
             'rmse': self._rmse,
+            'jaccard': self._jaccard,
+            'intersection': self._intersection
         }
+        if self._number_of_answers is not None:
+            to_json['number_of_answers'] = self._number_of_answers
         filename = self.filename(directory) + '_stats.json'
         with open(filename, 'w') as f:
             json.dump(to_json, f)
