@@ -46,10 +46,10 @@ def plot_model_parameters(plot, scenario, simulator_factory, parameter_x, parame
             simulator = simulator_factory(x, y)
             rmses[x][y] = simulator.rmse()
     img = subplot.pcolor(rmses)
-    subplot.set_xlabel(name_y)
+    subplot.set_xlabel(name_x)
     subplot.set_xticklabels(
         list(numpy.linspace(min_x, max_x, len(subplot.get_xticks()) - 1)) + ['MAX'])
-    subplot.set_ylabel(name_x)
+    subplot.set_ylabel(name_y)
     subplot.set_yticklabels(
         list(numpy.linspace(min_y, max_y, len(subplot.get_yticks()) - 1)) + ['MAX'])
     plot.colorbar(img)
