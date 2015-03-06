@@ -12,10 +12,13 @@ COLORS = sns.color_palette()
 def plot_number_of_answers(plot, scenario, simulators):
     names = []
     numbers = []
+    probs = []
     subplot = plot.add_subplot(122)
     for simulator_name, simulator in simulators.iteritems():
         nums = simulator.number_of_answers().values()
         numbers.append(nums)
+        practice = map(lambda x: x[3], [x for xs in simulator.get_practice().values() for x in xs])
+        probs.append(practice)
         names.append(simulator_name)
         subplot.plot(sorted(nums, reverse=True), label=simulator_name)
     subplot.legend(loc='center left', bbox_to_anchor=(1, 0.5))
@@ -23,9 +26,9 @@ def plot_number_of_answers(plot, scenario, simulators):
     subplot.set_ylabel('Number of Answers')
 
     subplot = plot.add_subplot(121)
-    subplot.hist(numbers, label=names)
-    subplot.set_xlabel('Number of Answers')
-    subplot.set_ylabel('Number of Items')
+    subplot.set_xlabel('Difficulty')
+    subplot.set_ylabel('Number of Answers')
+    subplot.hist(probs, label=names, bins=20)
 
     plot.set_size_inches(17, 5)
     return plot
