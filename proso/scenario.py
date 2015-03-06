@@ -55,6 +55,9 @@ class Scenario:
     def config_hash(self):
         return hashlib.sha1(json.dumps(self._data['config'], sort_keys=True)).hexdigest()
 
+    def parameter(self, simulator_key, parameter_name):
+        return self._data['config']['parameters'][simulator_key][parameter_name]
+
     def practice_length(self):
         return self._data['config']['practice_length']
 
@@ -62,7 +65,7 @@ class Scenario:
         return self._data['config']['target_probability']
 
     def number_of_clusters(self):
-        return self._data['config']['number_of_clusters']
+        return len(self._data['config']['skills'])
 
     def number_of_items(self):
         return self._data['config']['number_of_items']
@@ -71,7 +74,10 @@ class Scenario:
         return self._data['config']['number_of_users']
 
     def number_of_items_with_wrong_cluster(self):
-        return self._data['config']['number_of_items_with_wrong_cluster']
+        return self._data['config']['wrong_clusters']['number_of_items']
+
+    def affected_wrong_clusters(self):
+        return self._data['config']['wrong_clusters']['affected_clusters']
 
     def write(self, key, value):
         self._data['storage'][key] = value
@@ -125,22 +131,28 @@ class Scenario:
 
     def _clusters(self, storage):
         if 'clusters' not in storage:
-            number_of_items = int(self._data['config']['number_of_items'])
-            number_of_clusters = int(self._data['config']['number_of_clusters'])
+            number_of_items = self.number_of_items()
+            number_of_clusters = self.number_of_clusters()
             storage['clusters'] = dict(map(lambda i: (i, random.choice(range(number_of_clusters))), range(number_of_items)))
         return storage['clusters']
 
     def _difficulties(self, storage):
         if 'difficulties' not in storage:
             number_of_items = int(self._data['config']['number_of_items'])
-            storage['difficulties'] = dict(map(lambda i: (i, numpy.random.normal(0, 1)), range(number_of_items)))
+            difficulty_mean = float(self._data['config']['difficulty']['mean'])
+            difficulty_std = float(self._data['config']['difficulty']['std'])
+            storage['difficulties'] = dict(map(lambda i: (i, numpy.random.normal(difficulty_mean, difficulty_std)), range(number_of_items)))
         return storage['difficulties']
 
     def _skills(self, storage):
         if 'skills' not in storage:
-            number_of_users = int(self._data['config']['number_of_users'])
-            number_of_clusters = int(self._data['config']['number_of_clusters'])
+            number_of_users = self.number_of_users()
+            def _skill():
+                skills = []
+                for skill in self._data['config']['skills']:
+                    skills.append(numpy.random.normal(float(skill['mean']), float(skill['std'])))
+                return skills
             storage['skills'] = dict(map(
-                lambda u: (u, list(numpy.random.normal(0, 1, size=number_of_clusters))),
+                lambda u: (u, _skill()),
                 range(number_of_users)))
         return storage['skills']

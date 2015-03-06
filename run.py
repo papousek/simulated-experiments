@@ -72,9 +72,9 @@ def main():
 
     simulators = {
         'Optimal': scenario.optimal_simulator(),
-        'Elo': scenario.init_simulator(args.destination, ClusterEloModel(clusters={})),
-        'Elo, Clusters': scenario.init_simulator(args.destination, ClusterEloModel(clusters=clusters)),
-        'Elo, Clusters (wrong)': scenario.init_simulator(args.destination, ClusterEloModel(clusters=clusters, number_of_items_with_wrong_cluster=scenario.number_of_items_with_wrong_cluster())),
+        'Elo': scenario.init_simulator(args.destination, ClusterEloModel(scenario, clusters={})),
+        'Elo, Clusters': scenario.init_simulator(args.destination, ClusterEloModel(scenario, clusters=clusters)),
+        'Elo, Clusters (wrong)': scenario.init_simulator(args.destination, ClusterEloModel(scenario, clusters=clusters, number_of_items_with_wrong_cluster=scenario.number_of_items_with_wrong_cluster())),
         'Naive': scenario.init_simulator(args.destination, NaiveModel()),
         'Constant': scenario.init_simulator(args.destination, ConstantModel(constant=scenario.target_probability()))
     }
@@ -93,7 +93,7 @@ def main():
         savefig(args, scenario, plot_model_parameters(
             fig,
             scenario,
-            lambda x, y: scenario.init_simulator(args.destination, ClusterEloModel(clusters={}, alpha=x, dynamic_alpha=y)),
+            lambda x, y: scenario.init_simulator(args.destination, ClusterEloModel(scenario, clusters={}, alpha=x, dynamic_alpha=y)),
             ('alpha', 0, 1, 11),
             ('beta', 0.0, 0.1, 11)
         ), 'elo_parameters')
@@ -101,7 +101,7 @@ def main():
         savefig(args, scenario, plot_model_parameters(
             fig,
             scenario,
-            lambda x, y: scenario.init_simulator(args.destination, ClusterEloModel(clusters=clusters, alpha=x, dynamic_alpha=y)),
+            lambda x, y: scenario.init_simulator(args.destination, ClusterEloModel(scenario, clusters=clusters, alpha=x, dynamic_alpha=y)),
             ('alpha', 0, 1, 11),
             ('beta', 0, 0.1, 11)
         ), 'elo_clusters_parameters')

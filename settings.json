@@ -4,40 +4,79 @@
             "name": "default",
             "number_of_items": 200,
             "number_of_users": 1000,
-            "number_of_clusters": 2,
-            "skill_mean": 0,
-            "skill_std": 1,
-            "difficulty_mean": 0,
-            "difficulty_std": 1,
+            "skills": [
+                {"mean": 0, "std": 1},
+                {"mean": 0, "std": 1}
+            ],
+            "difficulty": {"mean": 0, "std": 1},
+            "parameters": {
+                "elo": {
+                    "alpha": 0.3,
+                    "beta": 0.04
+                },
+                "elo_clusters": {
+                    "alpha": 0.3,
+                    "beta": 0.04
+                }
+            },
+            "wrong_clusters": {
+                "affected_clusters": [0, 1],
+                "number_of_items": 50
+            },
             "practice_length": 50,
-            "target_probability": 0.75,
-            "number_of_items_with_wrong_cluster": 50
+            "target_probability": 0.75
+        },
+        {
+            "name": "default-small",
+            "number_of_items": 200,
+            "number_of_users": 100,
+            "skills": [
+                {"mean": 0, "std": 1},
+                {"mean": 0, "std": 1}
+            ],
+            "difficulty": {"mean": 0, "std": 1},
+            "parameters": {
+                "elo": {
+                    "alpha": 0.3,
+                    "beta": 0.04
+                },
+                "elo_clusters": {
+                    "alpha": 0.3,
+                    "beta": 0.04
+                }
+            },
+            "wrong_clusters": {
+                "affected_clusters": [0, 1],
+                "number_of_items": 50
+            },
+            "practice_length": 50,
+            "target_probability": 0.75
         },
         {
             "name": "devel",
             "number_of_items": 100,
             "number_of_users": 10,
-            "number_of_clusters": 2,
-            "skill_mean": 0,
-            "skill_std": 1,
-            "difficulty_mean": 0,
-            "difficulty_std": 1,
+            "skills": [
+                {"mean": 0, "std": 1},
+                {"mean": 0, "std": 1}
+            ],
+            "difficulty": {"mean": 0, "std": 1},
+            "parameters": {
+                "elo": {
+                    "alpha": 0.3,
+                    "beta": 0.04
+                },
+                "elo_clusters": {
+                    "alpha": 0.3,
+                    "beta": 0.04
+                }
+            },
+            "wrong_clusters": {
+                "affected_clusters": [0, 1],
+                "number_of_items": 50
+            },
             "practice_length": 50,
-            "target_probability": 0.75,
-            "number_of_items_with_wrong_cluster": 50
-        },
-        {
-            "name": "devel-big",
-            "number_of_items": 100,
-            "number_of_users": 100,
-            "number_of_clusters": 2,
-            "skill_mean": 0,
-            "skill_std": 1,
-            "difficulty_mean": 0,
-            "difficulty_std": 1,
-            "practice_length": 50,
-            "target_probability": 0.75,
-            "number_of_items_with_wrong_cluster": 50
+            "target_probability": 0.75
         }
     ]
 }

@@ -88,7 +88,7 @@ def plot_wrong_clusters_vs_jaccard(plot, scenario, optimal_simulator, destinatio
     for wrong_clusters in xrange(0, int(math.ceil(len(scenario.difficulties()) / 2.0)) + 1, step):
         simulator = scenario.init_simulator(
             destination,
-            ClusterEloModel(clusters=scenario.clusters(), number_of_items_with_wrong_cluster=wrong_clusters))
+            ClusterEloModel(scenario, clusters=scenario.clusters(), number_of_items_with_wrong_cluster=wrong_clusters))
         wrong.append(wrong_clusters)
         rmses.append(simulator.rmse())
         jaccard.append(simulator.jaccard()[0])

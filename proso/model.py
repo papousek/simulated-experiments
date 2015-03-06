@@ -46,20 +46,21 @@ class OptimalModel(Model):
 
 class ClusterEloModel(Model):
 
-    def __init__(self, clusters, alpha=None, dynamic_alpha=None, number_of_items_with_wrong_cluster=0):
+    def __init__(self, scenario, clusters, alpha=None, dynamic_alpha=None, number_of_items_with_wrong_cluster=0, affected_wrong_clusters=None):
         if alpha is None or dynamic_alpha is None:
             if len(clusters) > 0:
-                alpha = 0.3
-                dynamic_alpha = 0.04
+                alpha = scenario.parameter('elo_clusters', 'alpha')
+                dynamic_alpha = scenario.parameter('elo_clusters', 'beta')
             else:
-                alpha = 0.4
-                dynamic_alpha = 0.05
+                alpha = scenario.parameter('elo', 'alpha')
+                dynamic_alpha = scenario.parameter('elo', 'beta')
         if number_of_items_with_wrong_cluster > 0:
+            if affected_wrong_clusters is None:
+                affected_wrong_clusters = scenario.affected_wrong_clusters()
             wrong_items = random.sample(clusters.keys(), number_of_items_with_wrong_cluster)
             clusters = dict(clusters.items())
-            number_of_clusters = len(set(clusters.values()))
             for i in wrong_items:
-                available_clusters = set(range(number_of_clusters))
+                available_clusters = set(affected_wrong_clusters)
                 available_clusters.remove(clusters[i])
                 clusters[i] = random.choice(list(available_clusters))
         self._users = {}
