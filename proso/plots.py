@@ -9,6 +9,28 @@ from model import ClusterEloModel, OptimalModel, NoiseModel
 COLORS = sns.color_palette()
 
 
+def plot_number_of_answers(plot, scenario, simulators):
+    names = []
+    numbers = []
+    subplot = plot.add_subplot(122)
+    for simulator_name, simulator in simulators.iteritems():
+        nums = _number_of_answers(scenario, simulator.get_practice()).values()
+        numbers.append(nums)
+        names.append(simulator_name)
+        subplot.plot(sorted(nums, reverse=True), label=simulator_name)
+    subplot.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+    subplot.set_xlabel('Item (sorted according to the number of answers)')
+    subplot.set_ylabel('Number of Answers')
+
+    subplot = plot.add_subplot(121)
+    subplot.hist(numbers, label=names)
+    subplot.set_xlabel('Number of Answers')
+    subplot.set_ylabel('Number of Items')
+
+    plot.set_size_inches(17, 5)
+    return plot
+
+
 def plot_model_parameters(plot, scenario, simulator_factory, parameter_x, parameter_y):
     subplot = plot.add_subplot(111)
     name_x, min_x, max_x, steps_x = parameter_x
@@ -92,7 +114,6 @@ def plot_wrong_clusters_vs_jaccard(plot, scenario, optimal_simulator, destinatio
     return plot
 
 
-
 def plot_jaccard(plot, scenario, simulators):
     intersections_all = scenario.read('plot_jaccard__all')
     jaccard_trends = scenario.read('plot_jaccard__trends')
@@ -158,3 +179,12 @@ def plot_rmse_complex(plot, scenario, simulators):
     subplot.set_ylim(0.4, 0.6)
     plot.set_size_inches(17, 5)
     return plot
+
+
+def _number_of_answers(scenario, practice):
+    result = dict(map(lambda (i, d): (i, 0), scenario.difficulties().items()))
+    def _reducer(acc, i):
+        acc[i] += 1
+        return acc
+    reduce(_reducer, map(lambda x: x[0], [x for xs in practice.values() for x in xs]), result)
+    return result
