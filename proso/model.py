@@ -1,6 +1,7 @@
 import abc
 import math
 import random
+from collections import defaultdict
 
 
 def predict(skill):
@@ -139,3 +140,22 @@ class ConstantModel(Model):
     def __str__(self):
         return 'constant (%.2f)' % self._constant
 
+
+class NoiseModel(Model):
+
+    def __init__(self, model, std):
+        self._model = model
+        self._std = std
+        self._noise = defaultdict(lambda: random.gauss(0, self._std))
+
+    def predict(self, user, item):
+        return self._model.predict(user, item) + self._noise[user, item]
+
+    def update(self, user, item, correct):
+        return self._model.update(user, item, correct)
+
+    def reset(self):
+        return self._model.reset()
+
+    def __str__(self):
+        return 'permanent noise (std: %s): %s' % (self._std, str(self._model))

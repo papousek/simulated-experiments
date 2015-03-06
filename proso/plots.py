@@ -3,7 +3,7 @@ import numpy
 import seaborn as sns
 import pandas
 import math
-from model import ClusterEloModel
+from model import ClusterEloModel, OptimalModel, NoiseModel
 
 
 COLORS = sns.color_palette()
@@ -28,6 +28,36 @@ def plot_model_parameters(plot, scenario, simulator_factory, parameter_x, parame
     subplot.set_yticklabels(
         list(numpy.linspace(min_y, max_y, len(subplot.get_yticks()) - 1)) + ['MAX'])
     plot.colorbar(img)
+    return plot
+
+
+def plot_noise_vs_jaccard(plot, scenario, optimal_simulator, destination, std_step=0.01, std_max=0.35):
+    stds = []
+    rmses = []
+    jaccard = []
+    optimal_model = OptimalModel(scenario.skills(), scenario.difficulties(), scenario.clusters())
+    for std in numpy.arange(0, std_max, std_step):
+        simulator = scenario.init_simulator(destination, NoiseModel(optimal_model, std))
+        user_jaccard = []
+        for u in xrange(scenario.number_of_users()):
+            first_set = set(zip(*optimal_simulator.get_practice()[u])[0])
+            second_set = set(zip(*simulator.get_practice()[u])[0])
+            user_jaccard.append(len(first_set & second_set) / float(len(first_set | second_set)))
+        stds.append(std)
+        rmses.append(simulator.rmse())
+        jaccard.append(numpy.mean(user_jaccard))
+
+    subplot = plot.add_subplot(121)
+    subplot.plot(stds, rmses)
+    subplot.set_xlabel('Noise (standard deviation)')
+    subplot.set_ylabel('RMSE')
+
+    subplot = plot.add_subplot(122)
+    subplot.plot(stds, jaccard)
+    subplot.set_xlabel('Noise (standard deviation)')
+    subplot.set_ylabel('Jaccard Similarity Coefficient')
+
+    plot.set_size_inches(17, 5)
     return plot
 
 
