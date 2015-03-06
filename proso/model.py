@@ -57,7 +57,8 @@ class ClusterEloModel(Model):
         if number_of_items_with_wrong_cluster > 0:
             if affected_wrong_clusters is None:
                 affected_wrong_clusters = scenario.affected_wrong_clusters()
-            wrong_items = random.sample(clusters.keys(), number_of_items_with_wrong_cluster)
+            wrong_items_cands = [i for (i, c) in clusters.iteritems() if c in affected_wrong_clusters]
+            wrong_items = random.sample(wrong_items_cands, number_of_items_with_wrong_cluster)
             clusters = dict(clusters.items())
             for i in wrong_items:
                 available_clusters = set(affected_wrong_clusters)

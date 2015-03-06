@@ -83,27 +83,28 @@ def main():
     fig = plt.figure()
     savefig(args, scenario, plot_rmse_complex(fig, scenario, simulators), 'rmse_complex')
     fig = plt.figure()
-    savefig(args, scenario, plot_wrong_clusters_vs_jaccard(fig, scenario, simulators['Optimal'], args.destination), 'wrong_clusters_vs_jaccard')
-    fig = plt.figure()
     savefig(args, scenario, plot_number_of_answers(fig, scenario, simulators), 'number_of_answers')
-    fig = plt.figure()
-    savefig(args, scenario, plot_noise_vs_jaccard(fig, scenario, simulators['Optimal'], args.destination), 'noise_vs_jaccard')
+    if args.skip_groups is None or 'noise' not in args.skip_groups:
+        fig = plt.figure()
+        savefig(args, scenario, plot_wrong_clusters_vs_jaccard(fig, scenario, simulators['Optimal'], args.destination), 'wrong_clusters_vs_jaccard')
+        fig = plt.figure()
+        savefig(args, scenario, plot_noise_vs_jaccard(fig, scenario, simulators['Optimal'], args.destination), 'noise_vs_jaccard')
     if args.skip_groups is None or 'fitting' not in args.skip_groups:
         fig = plt.figure()
         savefig(args, scenario, plot_model_parameters(
             fig,
             scenario,
             lambda x, y: scenario.init_simulator(args.destination, ClusterEloModel(scenario, clusters={}, alpha=x, dynamic_alpha=y)),
-            ('alpha', 0, 1, 11),
-            ('beta', 0.0, 0.1, 11)
+            ('alpha', 0.5, 2, 4),
+            ('beta', 0.05, 0.2, 4)
         ), 'elo_parameters')
         fig = plt.figure()
         savefig(args, scenario, plot_model_parameters(
             fig,
             scenario,
             lambda x, y: scenario.init_simulator(args.destination, ClusterEloModel(scenario, clusters=clusters, alpha=x, dynamic_alpha=y)),
-            ('alpha', 0, 1, 11),
-            ('beta', 0, 0.1, 11)
+            ('alpha', 0.5, 2, 4),
+            ('beta', 0.05, 0.2, 4)
         ), 'elo_clusters_parameters')
     if not args.skip_cache:
         scenario.save(args.destination)
