@@ -34,7 +34,7 @@ def plot_number_of_answers(plot, scenario, simulators):
     return plot
 
 
-def plot_model_parameters(plot, scenario, simulator_factory, parameter_x, parameter_y):
+def plot_model_parameters(plot, scenario, model_factory, parameter_x, parameter_y):
     subplot = plot.add_subplot(111)
     name_x, min_x, max_x, steps_x = parameter_x
     name_y, min_y, max_y, steps_y = parameter_y
@@ -43,8 +43,8 @@ def plot_model_parameters(plot, scenario, simulator_factory, parameter_x, parame
     rmses = pandas.DataFrame(columns=xs, index=ys, dtype=float)
     for x in xs:
         for y in ys:
-            simulator = simulator_factory(x, y)
-            rmses[x][y] = simulator.rmse()
+            model = model_factory(x, y)
+            rmses[x][y] = scenario.optimal_simulator().replay(model)
     img = subplot.pcolor(rmses)
     subplot.set_xlabel(name_x)
     subplot.set_xticklabels(
@@ -151,6 +151,6 @@ def plot_rmse_complex(plot, scenario, simulators):
     subplot.legend(loc='center left', bbox_to_anchor=(1, 0.5))
     subplot.set_xlabel('Data Set')
     subplot.set_ylabel('RMSE')
-    subplot.set_ylim(0.4, 0.6)
+    subplot.set_ylim(0.3, 0.6)
     plot.set_size_inches(17, 5)
     return plot

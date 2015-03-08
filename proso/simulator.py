@@ -46,9 +46,11 @@ class Simulator:
         self._rmse = {}
         self._jaccard = {}
         self._intersection = {}
+        self._replay = {}
         self._number_of_answers = None
         self._scenario = scenario
         self._directory = None
+        self._stats_loaded = False
 
     def simulate(self):
         self._simulate(
@@ -128,15 +130,19 @@ class Simulator:
         return self._get_data(self.get_practice(), practice_length)
 
     def replay(self, model):
-        predicted = []
-        actual = []
-        model.reset()
-        for u in sorted(self._users.keys()):
-            for item, _, correct, _ in self.get_practice()[u]:
-                predicted.append(model.predict(u, item))
-                model.update(u, item, correct)
-                actual.append(correct)
-        return rmse(predicted, actual)
+        result = self._replay.get(str(model))
+        if result is None:
+            predicted = []
+            actual = []
+            model.reset()
+            for u in sorted(self._users.keys()):
+                for item, _, correct, _ in self.get_practice()[u]:
+                    predicted.append(model.predict(u, item))
+                    model.update(u, item, correct)
+                    actual.append(correct)
+            result = rmse(predicted, actual)
+            self._replay[str(model)] = result
+        return result
 
     def filename(self, directory):
         return directory + '/' + self.hash()
@@ -165,7 +171,7 @@ class Simulator:
             self._practice = convert_dict(to_json['practice'], int, list)
 
     def _load_stats(self):
-        if self._directory is None:
+        if self._directory is None or self._stats_loaded:
             return
         filename = self.filename(self._directory) + '_stats.json'
         if not path.exists(filename):
@@ -175,14 +181,18 @@ class Simulator:
             self._rmse = convert_dict(to_json['rmse'], int, float)
             self._jaccard = convert_dict(to_json['jaccard'], int, dict)
             self._intersection = convert_dict(to_json['intersection'], int, dict)
+            self._replay = convert_dict(to_json['replay'], str, float)
             if 'number_of_answers' in to_json:
                 self._number_of_answers = convert_dict(to_json['number_of_answers'], int, int)
+            self._stats_loaded = True
 
     def _save_stats(self, directory):
         to_json = {
+            'model': str(self._model),
             'rmse': self._rmse,
             'jaccard': self._jaccard,
-            'intersection': self._intersection
+            'intersection': self._intersection,
+            'replay': self._replay
         }
         if self._number_of_answers is not None:
             to_json['number_of_answers'] = self._number_of_answers

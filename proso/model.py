@@ -83,7 +83,7 @@ class ClusterEloModel(Model):
         item_nums = self._answers.get(('item', item), 0)
         self._users[user, cluster] = self._users.get((user, cluster), 0) + self.alpha(user_nums) * (correct - prediction)
         self._items[item] = self._items.get(item, 0) - self.alpha(item_nums) * (correct - prediction)
-        self._answers['user', user, cluster] = self._answers.get(('user', user), 0) + 1
+        self._answers['user', user, cluster] = self._answers.get(('user', user, cluster), 0) + 1
         self._answers['item', item] = self._answers.get(('item', item), 0) + 1
 
     def alpha(self, n):

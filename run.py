@@ -78,12 +78,13 @@ def main():
         'Naive': scenario.init_simulator(args.destination, NaiveModel()),
         'Constant': scenario.init_simulator(args.destination, ConstantModel(constant=scenario.target_probability()))
     }
-    fig = plt.figure()
-    savefig(args, scenario, plot_jaccard(fig, scenario, simulators), 'jaccard')
-    fig = plt.figure()
-    savefig(args, scenario, plot_rmse_complex(fig, scenario, simulators), 'rmse_complex')
-    fig = plt.figure()
-    savefig(args, scenario, plot_number_of_answers(fig, scenario, simulators), 'number_of_answers')
+    if args.skip_groups is None or 'common' not in args.skip_groups:
+        fig = plt.figure()
+        savefig(args, scenario, plot_jaccard(fig, scenario, simulators), 'jaccard')
+        fig = plt.figure()
+        savefig(args, scenario, plot_rmse_complex(fig, scenario, simulators), 'rmse_complex')
+        fig = plt.figure()
+        savefig(args, scenario, plot_number_of_answers(fig, scenario, simulators), 'number_of_answers')
     if args.skip_groups is None or 'noise' not in args.skip_groups:
         fig = plt.figure()
         savefig(args, scenario, plot_wrong_clusters_vs_jaccard(fig, scenario, simulators['Optimal'], args.destination), 'wrong_clusters_vs_jaccard')
@@ -94,17 +95,17 @@ def main():
         savefig(args, scenario, plot_model_parameters(
             fig,
             scenario,
-            lambda x, y: scenario.init_simulator(args.destination, ClusterEloModel(scenario, clusters={}, alpha=x, dynamic_alpha=y)),
-            ('alpha', 0.5, 2, 4),
-            ('beta', 0.05, 0.2, 4)
+            lambda x, y: ClusterEloModel(scenario, clusters={}, alpha=x, dynamic_alpha=y),
+            ('alpha', 0.25, 1.5, 6),
+            ('beta', 0.01, 0.1, 10)
         ), 'elo_parameters')
         fig = plt.figure()
         savefig(args, scenario, plot_model_parameters(
             fig,
             scenario,
-            lambda x, y: scenario.init_simulator(args.destination, ClusterEloModel(scenario, clusters=clusters, alpha=x, dynamic_alpha=y)),
-            ('alpha', 0.5, 2, 4),
-            ('beta', 0.05, 0.2, 4)
+            lambda x, y: ClusterEloModel(scenario, clusters=clusters, alpha=x, dynamic_alpha=y),
+            ('alpha', 0.25, 1.5, 6),
+            ('beta', 0.01, 0.1, 10)
         ), 'elo_clusters_parameters')
     if not args.skip_cache:
         scenario.save(args.destination)

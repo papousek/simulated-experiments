@@ -28,7 +28,6 @@ class Scenario:
     def init_simulator(self, directory, model, practice_length=None):
         if not self._optimal_simulator_saved and self._optimal_simulator is not None:
             self._optimal_simulator.load(self.filename(directory))
-            self._optimal_simulator.save(self.filename(directory))
         simulator = Simulator(
             OptimalModel(self.skills(), self.difficulties(), self.clusters()),
             model,
@@ -107,6 +106,8 @@ class Scenario:
             json.dump(self._data, f)
         for simulator in self._simulators.values():
             simulator.save(self.filename(directory))
+        if self._optimal_simulator is not None:
+            self._optimal_simulator.save(self.filename(directory))
 
     def skills(self):
         return self._skills(self._data['test_set'])
