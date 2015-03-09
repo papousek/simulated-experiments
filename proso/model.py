@@ -151,7 +151,7 @@ class NoiseModel(Model):
         self._noise = defaultdict(lambda: random.gauss(0, self._std))
 
     def predict(self, user, item):
-        return self._model.predict(user, item) + self._noise[user, item]
+        return min(max(self._model.predict(user, item) + self._noise[user, item], 0), 1)
 
     def update(self, user, item, correct):
         return self._model.update(user, item, correct)
