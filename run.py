@@ -85,6 +85,8 @@ def main():
         savefig(args, scenario, plot_rmse_complex(fig, scenario, simulators), 'rmse_complex')
         fig = plt.figure()
         savefig(args, scenario, plot_number_of_answers(fig, scenario, simulators), 'number_of_answers')
+        fig = plt.figure()
+        savefig(args, scenario, plot_scenario(fig, scenario), 'scenario')
     if args.skip_groups is None or 'noise' not in args.skip_groups:
         fig = plt.figure()
         savefig(args, scenario, plot_wrong_clusters_vs_jaccard(fig, scenario, simulators['Optimal'], args.destination), 'wrong_clusters_vs_jaccard')

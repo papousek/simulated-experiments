@@ -4,9 +4,31 @@ import seaborn as sns
 import pandas
 import math
 from model import ClusterEloModel, OptimalModel, NoiseModel
+from collections import defaultdict
 
 
 COLORS = sns.color_palette()
+
+def plot_scenario(plot, scenario):
+    skills = defaultdict(list)
+    difficulties = []
+    for _, user_skills in scenario.skills().iteritems():
+        for i, skill in enumerate(user_skills):
+            skills[i].append(skill)
+    for d in scenario.difficulties().itervalues():
+        difficulties.append(d)
+    subplot = plot.add_subplot(121)
+    subplot.hist(difficulties)
+    subplot.set_xlabel('Difficulty')
+    subplot.set_ylabel('Number of Items')
+
+    subplot = plot.add_subplot(122)
+    subplot.hist(skills.values())
+    subplot.set_xlabel('Skill')
+    subplot.set_ylabel('Number of Users')
+
+    plot.set_size_inches(17, 5)
+    return plot
 
 
 def plot_number_of_answers(plot, scenario, simulators):
