@@ -173,6 +173,5 @@ def plot_rmse_complex(plot, scenario, simulators):
     subplot.legend(loc='center left', bbox_to_anchor=(1, 0.5))
     subplot.set_xlabel('Data Set')
     subplot.set_ylabel('RMSE')
-    subplot.set_ylim(0.3, 0.6)
     plot.set_size_inches(17, 5)
     return plot
