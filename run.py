@@ -70,6 +70,13 @@ def main():
     items = scenario.difficulties()
     clusters = scenario.clusters()
 
+    models = {
+        'Elo': ClusterEloModel(scenario, clusters={}),
+        'Elo, Clusters': ClusterEloModel(scenario, clusters=clusters),
+        'Elo, Clusters (wrong)': ClusterEloModel(scenario, clusters=clusters, number_of_items_with_wrong_cluster=scenario.number_of_items_with_wrong_cluster()),
+        'Naive': NaiveModel(),
+        'Constant': ConstantModel(constant=scenario.target_probability())
+    }
     simulators = {
         'Optimal': scenario.optimal_simulator(),
         'Elo': scenario.init_simulator(args.destination, ClusterEloModel(scenario, clusters={})),
@@ -87,6 +94,9 @@ def main():
         savefig(args, scenario, plot_number_of_answers(fig, scenario, simulators), 'number_of_answers')
         fig = plt.figure()
         savefig(args, scenario, plot_scenario(fig, scenario), 'scenario')
+    if args.skip_groups is None or 'target_prob' not in args.skip_groups:
+        fig = plt.figure()
+        savefig(args, scenario, plot_target_probability_vs_jaccard_rmse(fig, scenario, args.destination, models), 'target_prob_vs_jaccard_rmse')
     if args.skip_groups is None or 'noise' not in args.skip_groups:
         fig = plt.figure()
         savefig(args, scenario, plot_wrong_clusters_vs_jaccard(fig, scenario, simulators['Optimal'], args.destination), 'wrong_clusters_vs_jaccard')

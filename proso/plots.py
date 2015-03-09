@@ -31,6 +31,34 @@ def plot_scenario(plot, scenario):
     return plot
 
 
+def plot_target_probability_vs_jaccard_rmse(plot, scenario, destination, models, target_prob_step=0.05, target_prob_min=0.5, target_prob_max=1):
+    subplot = plot.add_subplot(121)
+    optimal_model = OptimalModel(scenario.skills(), scenario.difficulties(), scenario.clusters())
+    target_probs = numpy.arange(target_prob_min, target_prob_max, target_prob_step)
+    for model_name, model in models.iteritems():
+        model_jaccards = []
+        for target_prob in target_probs:
+            simulator = scenario.init_simulator(destination, model, target_probability=target_prob)
+            optimal_simulator = scenario.init_simulator(destination, optimal_model, target_probability=target_prob)
+            model_jaccards.append(simulator.jaccard(baseline=optimal_simulator)[0])
+        subplot.plot(target_probs, model_jaccards, label=model_name)
+    subplot.set_xlabel('Target Difficulty')
+    subplot.set_ylabel('Jaccard Similarity Coefficient')
+    subplot = plot.add_subplot(122)
+    for model_name, model in models.iteritems():
+        model_rmses = []
+        for target_prob in target_probs:
+            rmse = scenario.init_simulator(destination, optimal_model, target_probability=target_prob).replay(model)
+            model_rmses.append(rmse)
+        subplot.plot(target_probs, model_rmses, label=model_name)
+    subplot.set_xlabel('Target Difficulty')
+    subplot.set_ylabel('RMSE')
+    subplot.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+
+    plot.set_size_inches(17, 5)
+    return plot
+
+
 def plot_number_of_answers(plot, scenario, simulators):
     names = []
     numbers = []

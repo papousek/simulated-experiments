@@ -26,9 +26,11 @@ def recommend_random(items_with_predictions):
 
 class Simulator:
 
-    def __init__(self, optimal_model, model, scenario, practice_length=None, train=False):
+    def __init__(self, optimal_model, model, scenario, practice_length=None, train=False, target_probability=None):
         if practice_length is None:
             practice_length = scenario.practice_length()
+        if target_probability is None:
+            target_probability = scenario.target_probability()
         self._optimal_model = optimal_model
         self._model = model
         if train:
@@ -41,7 +43,7 @@ class Simulator:
             self._clusters = scenario.clusters()
         self._train = train
         self._practice_length = scenario.practice_length()
-        self._target_probability = scenario.target_probability()
+        self._target_probability = target_probability
         self._practice = {}
         self._rmse = {}
         self._jaccard = {}
@@ -70,12 +72,14 @@ class Simulator:
             self._number_of_answers = result
         return self._number_of_answers
 
-    def jaccard(self, practice_length=None):
+    def jaccard(self, practice_length=None, baseline=None):
         if practice_length is None:
             practice_length = self._practice_length
-        result = self._jaccard.get(practice_length)
-        if result is None:
+        if baseline is None:
             baseline = self._scenario.optimal_simulator()
+        jaccard_key = '%s:%s' % (baseline.hash(), practice_length)
+        result = self._jaccard.get(jaccard_key)
+        if result is None:
             jaccard = []
             for u in xrange(self._scenario.number_of_users()):
                 first_set = set(zip(*baseline.get_practice()[u])[0][:practice_length])
@@ -83,7 +87,7 @@ class Simulator:
                 jaccard.append(len(first_set & second_set) / float(len(first_set | second_set)))
             jaccard_mean, jaccard_std = numpy.mean(jaccard), numpy.std(jaccard)
             result = {'mean': jaccard_mean, 'std': jaccard_std}
-            self._jaccard[practice_length] = result
+            self._jaccard[jaccard_key] = result
         return result['mean'], result['std']
 
     def intersection(self, practice_length=None):
@@ -179,7 +183,7 @@ class Simulator:
         with open(filename, 'r') as f:
             to_json = json.loads(f.read())
             self._rmse = convert_dict(to_json['rmse'], int, float)
-            self._jaccard = convert_dict(to_json['jaccard'], int, dict)
+            self._jaccard = convert_dict(to_json['jaccard'], str, dict)
             self._intersection = convert_dict(to_json['intersection'], int, dict)
             self._replay = convert_dict(to_json['replay'], str, float)
             if 'number_of_answers' in to_json:
@@ -201,8 +205,8 @@ class Simulator:
             json.dump(to_json, f)
 
     def __str__(self):
-        return 'simulator, model: %s, practice length: %s, train: %s' % (
-            str(self._model), self._practice_length, self._train)
+        return 'simulator, model: %s, practice length: %s, train: %s, target prob: %.2f' % (
+            str(self._model), self._practice_length, self._train, self._target_probability)
 
     def _get_data(self, practice, practice_length):
         return [(u, p[0], p[2]) for u, ps in practice.iteritems() for p in ps[:practice_length]]

@@ -25,14 +25,16 @@ class Scenario:
         self._optimal_simulator = None
         self._optimal_simulator_saved = False
 
-    def init_simulator(self, directory, model, practice_length=None):
+    def init_simulator(self, directory, model, practice_length=None, target_probability=None):
         if not self._optimal_simulator_saved and self._optimal_simulator is not None:
             self._optimal_simulator.load(self.filename(directory))
+        model.reset()
         simulator = Simulator(
             OptimalModel(self.skills(), self.difficulties(), self.clusters()),
             model,
             self,
-            practice_length=practice_length)
+            practice_length=practice_length,
+            target_probability=target_probability)
         simulator_name = str(simulator)
         found_simulator = self._simulators.get(simulator_name)
         if found_simulator is None:
