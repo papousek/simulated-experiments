@@ -11,11 +11,11 @@
             "difficulty": {"mean": 0, "std": 1},
             "parameters": {
                 "elo": {
-                    "alpha": 0.3,
-                    "beta": 0.04
+                    "alpha": 0.25,
+                    "beta": 0.01
                 },
                 "elo_clusters": {
-                    "alpha": 0.3,
+                    "alpha": 0.5,
                     "beta": 0.04
                 }
             },
@@ -31,18 +31,97 @@
             "number_of_items": 200,
             "number_of_users": 100,
             "skills": [
-                {"mean": 0, "std": 1},
-                {"mean": 0, "std": 1}
+                {"mean": 1, "std": 3},
+                {"mean": -1, "std": 3}
             ],
             "difficulty": {"mean": 0, "std": 1},
             "parameters": {
                 "elo": {
-                    "alpha": 0.3,
-                    "beta": 0.04
+                    "alpha": 0.25,
+                    "beta": 0.01
                 },
                 "elo_clusters": {
-                    "alpha": 0.3,
-                    "beta": 0.04
+                    "alpha": 0.5,
+                    "beta": 0.01
+                }
+            },
+            "wrong_clusters": {
+                "affected_clusters": [0, 1],
+                "number_of_items": 50
+            },
+            "practice_length": 50,
+            "target_probability": 0.75
+        },
+        {
+            "name": "different-skills",
+            "number_of_items": 200,
+            "number_of_users": 1000,
+            "skills": [
+                {"mean": 0, "std": 1},
+                {"mean": 1, "std": 1}
+            ],
+            "difficulty": {"mean": 0, "std": 1},
+            "parameters": {
+                "elo": {
+                    "alpha": 0.25,
+                    "beta": 0.03
+                },
+                "elo_clusters": {
+                    "alpha": 0.25,
+                    "beta": 0.03
+                }
+            },
+            "wrong_clusters": {
+                "affected_clusters": [0, 1],
+                "number_of_items": 50
+            },
+            "practice_length": 50,
+            "target_probability": 0.75
+        },
+        {
+            "name": "different-skills-small",
+            "number_of_items": 200,
+            "number_of_users": 100,
+            "skills": [
+                {"mean": 0, "std": 1},
+                {"mean": 1, "std": 1}
+            ],
+            "difficulty": {"mean": 0, "std": 1},
+            "parameters": {
+                "elo": {
+                    "alpha": 0.25,
+                    "beta": 0.03
+                },
+                "elo_clusters": {
+                    "alpha": 0.25,
+                    "beta": 0.03
+                }
+            },
+            "wrong_clusters": {
+                "affected_clusters": [0, 1],
+                "number_of_items": 50
+            },
+            "practice_length": 50,
+            "target_probability": 0.75
+        },
+        {
+            "name": "three-different-skills",
+            "number_of_items": 200,
+            "number_of_users": 1000,
+            "skills": [
+                {"mean": 0, "std": 1},
+                {"mean": 0, "std": 1},
+                {"mean": 2, "std": 1}
+            ],
+            "difficulty": {"mean": 0, "std": 1},
+            "parameters": {
+                "elo": {
+                    "alpha": 0.5,
+                    "beta": 0.1
+                },
+                "elo_clusters": {
+                    "alpha": 0.5,
+                    "beta": 0.1
                 }
             },
             "wrong_clusters": {
