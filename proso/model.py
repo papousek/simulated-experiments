@@ -63,6 +63,7 @@ class ClusterEloModel(Model):
                 alpha = scenario.parameter('elo', 'alpha')
                 dynamic_alpha = scenario.parameter('elo', 'beta')
         if number_of_items_with_wrong_cluster > 0:
+            random.seed(sum(map(ord, scenario.config_hash())))
             if affected_wrong_clusters is None:
                 affected_wrong_clusters = scenario.affected_wrong_clusters()
             wrong_items_cands = [i for (i, c) in clusters.iteritems() if c in affected_wrong_clusters]
