@@ -25,14 +25,19 @@ class Model:
 
 class OptimalModel(Model):
 
-    def __init__(self, users, items, clusters):
+    def __init__(self, users, items, clusters, noise=None):
         self._users = users
         self._items = items
         self._clusters = clusters
+        self._noise_value = noise
+        noise_fun = lambda: 0
+        if self._noise_value is not None:
+            noise_fun = lambda: random.gauss(0, self._noise_value)
+        self._noise = defaultdict(noise_fun)
 
     def predict(self, user, item):
         cluster = self._clusters[item]
-        return predict(self._users[user][cluster] - self._items[item])
+        return predict(self._users[user][cluster] - self._items[item] + self._noise[user, item])
 
     def update(self, user, item, correct):
         pass
@@ -41,7 +46,10 @@ class OptimalModel(Model):
         pass
 
     def __str__(self):
-        return 'optimal'
+        result = 'optimal'
+        if self._noise_value is not None:
+            result += ', noise %.2f' % self._noise_value
+        return result
 
 
 class ClusterEloModel(Model):

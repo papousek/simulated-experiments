@@ -56,13 +56,13 @@ def plot_model_parameters(plot, scenario, model_factory, parameter_x, parameter_
     return plot
 
 
-def plot_noise_vs_jaccard(plot, scenario, optimal_simulator, destination, std_step=0.01, std_max=0.35):
+def plot_noise_vs_jaccard(plot, scenario, optimal_simulator, destination, std_step=0.05, std_max=1):
     stds = []
     rmses = []
     jaccard = []
-    optimal_model = OptimalModel(scenario.skills(), scenario.difficulties(), scenario.clusters())
     for std in numpy.arange(0, std_max, std_step):
-        simulator = scenario.init_simulator(destination, NoiseModel(optimal_model, std))
+        model = OptimalModel(scenario.skills(), scenario.difficulties(), scenario.clusters(), noise=std)
+        simulator = scenario.init_simulator(destination, model)
         stds.append(std)
         rmses.append(simulator.rmse())
         jaccard.append(simulator.jaccard()[0])
