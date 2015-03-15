@@ -72,16 +72,16 @@ def main():
 
     models = {
         'Elo': ClusterEloModel(scenario, clusters={}),
-        'Elo, Clusters': ClusterEloModel(scenario, clusters=clusters),
-        'Elo, Clusters (wrong)': ClusterEloModel(scenario, clusters=clusters, number_of_items_with_wrong_cluster=scenario.number_of_items_with_wrong_cluster()),
+        'Elo, Concepts': ClusterEloModel(scenario, clusters=clusters),
+        'Elo, Concepts (wrong)': ClusterEloModel(scenario, clusters=clusters, number_of_items_with_wrong_cluster=scenario.number_of_items_with_wrong_cluster()),
         'Naive': NaiveModel(),
         'Constant': ConstantModel(constant=scenario.target_probability())
     }
     simulators = {
         'Optimal': scenario.optimal_simulator(),
         'Elo': scenario.init_simulator(args.destination, ClusterEloModel(scenario, clusters={})),
-        'Elo, Clusters': scenario.init_simulator(args.destination, ClusterEloModel(scenario, clusters=clusters)),
-        'Elo, Clusters (wrong)': scenario.init_simulator(args.destination, ClusterEloModel(scenario, clusters=clusters, number_of_items_with_wrong_cluster=scenario.number_of_items_with_wrong_cluster())),
+        'Elo, Concepts': scenario.init_simulator(args.destination, ClusterEloModel(scenario, clusters=clusters)),
+        'Elo, Concepts (wrong)': scenario.init_simulator(args.destination, ClusterEloModel(scenario, clusters=clusters, number_of_items_with_wrong_cluster=scenario.number_of_items_with_wrong_cluster())),
         'Naive': scenario.init_simulator(args.destination, NaiveModel()),
         'Constant': scenario.init_simulator(args.destination, ConstantModel(constant=scenario.target_probability()))
     }
@@ -91,34 +91,37 @@ def main():
         fig = plt.figure()
         savefig(args, scenario, plot_rmse_complex(fig, scenario, simulators), 'rmse_complex')
         fig = plt.figure()
-        savefig(args, scenario, plot_number_of_answers(fig, scenario, simulators), 'number_of_answers')
-        fig = plt.figure()
-        savefig(args, scenario, plot_scenario(fig, scenario), 'scenario')
-    if args.skip_groups is None or 'target_prob' not in args.skip_groups:
-        fig = plt.figure()
-        savefig(args, scenario, plot_target_probability_vs_jaccard_rmse(fig, scenario, args.destination, models), 'target_prob_vs_jaccard_rmse')
+        savefig(args, scenario, plot_number_of_answers_per_difficulty(fig, scenario, simulators), 'number_of_answers')
+        #fig = plt.figure()
+        #savefig(args, scenario, plot_scenario(fig, scenario), 'scenario')
+    #if args.skip_groups is None or 'target_prob' not in args.skip_groups:
+        #fig = plt.figure()
+        #savefig(args, scenario, plot_target_probability_vs_jaccard_rmse(fig, scenario, args.destination, models), 'target_prob_vs_jaccard_rmse')
     if args.skip_groups is None or 'noise' not in args.skip_groups:
+        #fig = plt.figure()
+        #savefig(args, scenario, plot_wrong_clusters_vs_jaccard(fig, scenario, simulators['Optimal'], args.destination), 'wrong_clusters_vs_jaccard')
         fig = plt.figure()
-        savefig(args, scenario, plot_wrong_clusters_vs_jaccard(fig, scenario, simulators['Optimal'], args.destination), 'wrong_clusters_vs_jaccard')
-        fig = plt.figure()
-        savefig(args, scenario, plot_noise_vs_jaccard(fig, scenario, simulators['Optimal'], args.destination), 'noise_vs_jaccard')
-    if args.skip_groups is None or 'fitting' not in args.skip_groups:
-        fig = plt.figure()
-        savefig(args, scenario, plot_model_parameters(
-            fig,
-            scenario,
-            lambda x, y: ClusterEloModel(scenario, clusters={}, alpha=x, dynamic_alpha=y),
-            ('alpha', 0.25, 1.5, 6),
-            ('beta', 0.01, 0.1, 10)
-        ), 'elo_parameters')
-        fig = plt.figure()
-        savefig(args, scenario, plot_model_parameters(
-            fig,
-            scenario,
-            lambda x, y: ClusterEloModel(scenario, clusters=clusters, alpha=x, dynamic_alpha=y),
-            ('alpha', 0.25, 1.5, 6),
-            ('beta', 0.01, 0.1, 10)
-        ), 'elo_clusters_parameters')
+        plot_noise_vs_jaccard_number_of_answers(fig.add_subplot(121), scenario, simulators['Optimal'], args.destination)
+        plot_number_of_answers_distribution(fig.add_subplot(122), scenario, simulators)
+        fig.set_size_inches(17, 5)
+        savefig(args, scenario, fig, 'noise_vs_jaccard_number_of_answers')
+    #if args.skip_groups is None or 'fitting' not in args.skip_groups:
+        #fig = plt.figure()
+        #savefig(args, scenario, plot_model_parameters(
+            #fig,
+            #scenario,
+            #lambda x, y: ClusterEloModel(scenario, clusters={}, alpha=x, dynamic_alpha=y),
+            #('alpha', 0.25, 1.5, 6),
+            #('beta', 0.01, 0.1, 10)
+        #), 'elo_parameters')
+        #fig = plt.figure()
+        #savefig(args, scenario, plot_model_parameters(
+            #fig,
+            #scenario,
+            #lambda x, y: ClusterEloModel(scenario, clusters=clusters, alpha=x, dynamic_alpha=y),
+            #('alpha', 0.25, 1.5, 6),
+            #('beta', 0.01, 0.1, 10)
+        #), 'elo_clusters_parameters')
     if not args.skip_cache:
         scenario.save(args.destination)
 

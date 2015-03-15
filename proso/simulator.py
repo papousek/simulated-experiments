@@ -97,7 +97,7 @@ class Simulator:
         if result is None:
             baseline = self._scenario.optimal_simulator()
             intersection = []
-            for u in xrange(scenario.number_of_users()):
+            for u in xrange(self._scenario.number_of_users()):
                 first_set = set(zip(*baseline.get_practice()[u])[0][:practice_length])
                 second_set = set(zip(*self.get_practice()[u])[0][:practice_length])
                 intersection.append(len(first_set & second_set))
@@ -192,6 +192,7 @@ class Simulator:
 
     def _save_stats(self, directory):
         to_json = {
+            'str': str(self),
             'model': str(self._model),
             'rmse': self._rmse,
             'jaccard': self._jaccard,

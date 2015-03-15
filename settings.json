@@ -3,7 +3,7 @@
         {
             "name": "default",
             "number_of_items": 200,
-            "number_of_users": 1000,
+            "number_of_users": 5000,
             "skills": [
                 {"mean": 0, "std": 1},
                 {"mean": 0, "std": 1}
@@ -163,7 +163,7 @@
             "skills": [
                 {"mean": 0, "std": 1},
                 {"mean": 0, "std": 1},
-                {"mean": 2, "std": 1}
+                {"mean": -1, "std": 1}
             ],
             "difficulty": {"mean": 0, "std": 1},
             "parameters": {

@@ -5,6 +5,11 @@ import pandas
 import math
 from model import ClusterEloModel, OptimalModel, NoiseModel
 from collections import defaultdict
+from simulator import prediction_score
+
+SNS_STYLE = {'style': 'white', 'font_scale':1.7}
+
+sns.set(**SNS_STYLE)
 
 
 COLORS = sns.color_palette()
@@ -59,27 +64,46 @@ def plot_target_probability_vs_jaccard_rmse(plot, scenario, destination, models,
     return plot
 
 
-def plot_number_of_answers(plot, scenario, simulators):
+def plot_number_of_answers_distribution(subplot, scenario, simulators, bins=20):
     names = []
     numbers = []
-    probs = []
-    subplot = plot.add_subplot(122)
     for simulator_name, simulator in simulators.iteritems():
         nums = simulator.number_of_answers().values()
         numbers.append(nums)
+        names.append(simulator_name)
+        subplot.plot(sorted(nums, reverse=True), label=simulator_name, lw='2')
+    subplot.set_xlabel('Item (sorted according to the number of answers)')
+    subplot.set_ylabel('Number of Answers')
+    subplot.legend(loc='upper right')
+    return subplot
+
+
+def plot_number_of_answers_per_difficulty(plot, scenario, simulators, bins=20):
+    names = []
+    probs = []
+    for simulator_name, simulator in simulators.iteritems():
         practice = map(lambda x: x[3], [x for xs in simulator.get_practice().values() for x in xs])
         probs.append(practice)
         names.append(simulator_name)
-        subplot.plot(sorted(nums, reverse=True), label=simulator_name)
-    subplot.legend(loc='center left', bbox_to_anchor=(1, 0.5))
-    subplot.set_xlabel('Item (sorted according to the number of answers)')
+    target_probs = numpy.linspace(0, 1, bins)
+    subplot = plot.add_subplot(111)
+    subplot.set_xlabel('True Probability of Correct Answer')
     subplot.set_ylabel('Number of Answers')
-
-    subplot = plot.add_subplot(121)
-    subplot.set_xlabel('Difficulty')
-    subplot.set_ylabel('Number of Answers')
-    subplot.hist(probs, label=names, bins=20)
-
+    subplot.hist(probs, label=names, bins=bins)
+    subplot_twin = subplot.twinx()
+    subplot_twin.xaxis.grid(False)
+    subplot_twin.yaxis.grid(False)
+    subplot_twin.plot(
+        target_probs,
+        map(lambda x: prediction_score(x, scenario.target_probability()), target_probs),
+        '--',
+        lw=1,
+        color='gray',
+        alpha=0.5,
+        label='Score')
+    subplot_twin.set_ylabel('Score')
+    subplot.legend(loc='upper left')
+    subplot_twin.legend(loc='upper right')
     plot.set_size_inches(17, 5)
     return plot
 
@@ -106,7 +130,7 @@ def plot_model_parameters(plot, scenario, model_factory, parameter_x, parameter_
     return plot
 
 
-def plot_noise_vs_jaccard(plot, scenario, optimal_simulator, destination, std_step=0.05, std_max=1):
+def plot_noise_vs_jaccard_number_of_answers(subplot, scenario, optimal_simulator, destination, std_step=0.01, std_max=0.35):
     stds = []
     rmses = []
     jaccard = []
@@ -117,18 +141,20 @@ def plot_noise_vs_jaccard(plot, scenario, optimal_simulator, destination, std_st
         rmses.append(simulator.rmse())
         jaccard.append(simulator.jaccard()[0])
 
-    subplot = plot.add_subplot(121)
-    subplot.plot(stds, rmses)
-    subplot.set_xlabel('Noise (standard deviation)')
-    subplot.set_ylabel('RMSE')
+    subplot_twin = subplot.twinx()
 
-    subplot = plot.add_subplot(122)
-    subplot.plot(stds, jaccard)
+    subplot_twin.plot(stds, rmses, '-s', color=COLORS[0], label="RMSE")
+    subplot_twin.set_xlabel('Noise (standard deviation)')
+    subplot_twin.set_ylabel('RMSE')
+
+    subplot.plot(stds, jaccard, '-o', color=COLORS[2], label="Jaccard Similarity Coefficient")
     subplot.set_xlabel('Noise (standard deviation)')
     subplot.set_ylabel('Jaccard Similarity Coefficient')
 
-    plot.set_size_inches(17, 5)
-    return plot
+    subplot.legend(loc="upper center")
+    subplot_twin.legend(loc="lower center")
+
+    return subplot
 
 
 def plot_wrong_clusters_vs_jaccard(plot, scenario, optimal_simulator, destination, step=5):
@@ -160,14 +186,11 @@ def plot_wrong_clusters_vs_jaccard(plot, scenario, optimal_simulator, destinatio
 def plot_jaccard(plot, scenario, simulators):
     jaccard_trends = scenario.read('plot_jaccard__trends')
     if jaccard_trends is None:
-        intersections_all = []
         jaccard_trends = []
-        baseline = simulators['Optimal']
         for simulator_name, simulator in simulators.iteritems():
             if simulator_name == 'Optimal':
                 continue
             jaccard = []
-            intersections = []
             for i in xrange(1, scenario.practice_length() + 1):
                 jaccard.append(simulator.jaccard(i)[0])
             jaccard_trends.append(jaccard)
@@ -198,8 +221,10 @@ def plot_rmse_complex(plot, scenario, simulators):
     for i, current_rmse in enumerate(simulators_rmse):
         subplot.bar(index + i * bar_width, current_rmse, bar_width, label=names[i], color=COLORS[i])
     subplot.set_xticklabels(names)
-    subplot.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+    subplot.legend(loc='upper right')
     subplot.set_xlabel('Data Set')
+    subplot.xaxis.grid(False)
     subplot.set_ylabel('RMSE')
+    subplot.set_ylim(0.4, 0.6)
     plot.set_size_inches(17, 5)
     return plot
