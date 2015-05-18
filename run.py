@@ -87,7 +87,7 @@ def main():
     }
     if args.skip_groups is None or 'common' not in args.skip_groups:
         fig = plt.figure()
-        savefig(args, scenario, plot_jaccard(fig, scenario, simulators), 'jaccard')
+        savefig(args, scenario, plot_intersection(fig, scenario, simulators), 'intersection')
         fig = plt.figure()
         savefig(args, scenario, plot_rmse_complex(fig, scenario, simulators), 'rmse_complex')
         fig = plt.figure()
@@ -101,10 +101,10 @@ def main():
         #fig = plt.figure()
         #savefig(args, scenario, plot_wrong_clusters_vs_jaccard(fig, scenario, simulators['Optimal'], args.destination), 'wrong_clusters_vs_jaccard')
         fig = plt.figure()
-        plot_noise_vs_jaccard_number_of_answers(fig.add_subplot(121), scenario, simulators['Optimal'], args.destination)
+        plot_noise_vs_intersection_number_of_answers(fig.add_subplot(121), scenario, simulators['Optimal'], args.destination)
         plot_number_of_answers_distribution(fig.add_subplot(122), scenario, simulators)
         fig.set_size_inches(17, 5)
-        savefig(args, scenario, fig, 'noise_vs_jaccard_number_of_answers')
+        savefig(args, scenario, fig, 'noise_vs_intersection_number_of_answers')
     #if args.skip_groups is None or 'fitting' not in args.skip_groups:
         #fig = plt.figure()
         #savefig(args, scenario, plot_model_parameters(

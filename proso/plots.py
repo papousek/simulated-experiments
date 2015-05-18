@@ -130,16 +130,16 @@ def plot_model_parameters(plot, scenario, model_factory, parameter_x, parameter_
     return plot
 
 
-def plot_noise_vs_jaccard_number_of_answers(subplot, scenario, optimal_simulator, destination, std_step=0.01, std_max=0.35):
+def plot_noise_vs_intersection_number_of_answers(subplot, scenario, optimal_simulator, destination, std_step=0.01, std_max=0.35):
     stds = []
     rmses = []
-    jaccard = []
+    intersection = []
     for std in numpy.arange(0, std_max, std_step):
         model = OptimalModel(scenario.skills(), scenario.difficulties(), scenario.clusters(), noise=std)
         simulator = scenario.init_simulator(destination, model)
         stds.append(std)
         rmses.append(simulator.rmse())
-        jaccard.append(simulator.jaccard()[0])
+        intersection.append(simulator.intersection()[0])
 
     subplot_twin = subplot.twinx()
 
@@ -147,9 +147,9 @@ def plot_noise_vs_jaccard_number_of_answers(subplot, scenario, optimal_simulator
     subplot_twin.set_xlabel('Noise (standard deviation)')
     subplot_twin.set_ylabel('RMSE')
 
-    subplot.plot(stds, jaccard, '-o', color=COLORS[2], label="Jaccard Similarity Coefficient")
+    subplot.plot(stds, intersection, '-o', color=COLORS[2], label="Size of the Intersection\nwith the Optimal Practiced Set")
     subplot.set_xlabel('Noise (standard deviation)')
-    subplot.set_ylabel('Jaccard Similarity Coefficient')
+    subplot.set_ylabel('Size of the Intersection')
 
     subplot.legend(loc="upper center")
     subplot_twin.legend(loc="lower center")
@@ -183,23 +183,24 @@ def plot_wrong_clusters_vs_jaccard(plot, scenario, optimal_simulator, destinatio
     return plot
 
 
-def plot_jaccard(plot, scenario, simulators):
-    jaccard_trends = scenario.read('plot_jaccard__trends')
-    if jaccard_trends is None:
-        jaccard_trends = []
+def plot_intersection(plot, scenario, simulators):
+    intersection_trends = scenario.read('plot_intersection__trends')
+    if intersection_trends is None:
+        intersection_trends = []
         for simulator_name, simulator in simulators.iteritems():
             if simulator_name == 'Optimal':
                 continue
-            jaccard = []
+            intersection = []
             for i in xrange(1, scenario.practice_length() + 1):
-                jaccard.append(simulator.jaccard(i)[0])
-            jaccard_trends.append(jaccard)
-        scenario.write('plot_jaccard__trends', jaccard_trends)
+                intersection.append(simulator.intersection(i)[0])
+            intersection_trends.append(intersection)
+            print simulator_name, intersection[-1]
+        scenario.write('plot_intersection__trends', intersection_trends)
 
     subplot = plot.add_subplot(111)
     for i, (simulator_name, _) in enumerate(filter(lambda (n, s): n != 'Optimal', simulators.items())):
-        subplot.plot(range(scenario.practice_length()), jaccard_trends[i], label=simulator_name)
-    subplot.set_ylabel('Jaccard Similarity Coefficient')
+        subplot.plot(range(scenario.practice_length()), intersection_trends[i], label=simulator_name)
+    subplot.set_ylabel('Size of the Intersection')
     subplot.set_xlabel('Number of Attempts')
     subplot.legend(loc='center left', bbox_to_anchor=(1, 0.5))
     return plot
