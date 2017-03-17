@@ -20,4 +20,4 @@ def rmse(xs, ys):
 
 
 def convert_dict(json_dict, key_type, value_type):
-    return dict(map(lambda (k, v): (key_type(k), value_type(v)), json_dict.items()))
+    return dict([(key_type(k_v[0]), value_type(k_v[1])) for k_v in list(json_dict.items())])

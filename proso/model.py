@@ -66,9 +66,9 @@ class ClusterEloModel(Model):
             random.seed(sum(map(ord, scenario.config_hash())))
             if affected_wrong_clusters is None:
                 affected_wrong_clusters = scenario.affected_wrong_clusters()
-            wrong_items_cands = [i for (i, c) in clusters.iteritems() if c in affected_wrong_clusters]
+            wrong_items_cands = [i for (i, c) in clusters.items() if c in affected_wrong_clusters]
             wrong_items = random.sample(wrong_items_cands, number_of_items_with_wrong_cluster)
-            clusters = dict(clusters.items())
+            clusters = dict(list(clusters.items()))
             for i in wrong_items:
                 available_clusters = set(affected_wrong_clusters)
                 available_clusters.remove(clusters[i])

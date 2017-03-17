@@ -1,9 +1,10 @@
 from os import path, makedirs
-from util import rmse, convert_dict
+from .util import rmse, convert_dict
 import hashlib
 import json
 import numpy
 import random
+from functools import reduce
 
 
 def prediction_score(probability, target_probability):
@@ -14,14 +15,12 @@ def prediction_score(probability, target_probability):
 
 
 def recommend(items_with_predictions, target_probability):
-    scored = map(
-        lambda (i, p): (prediction_score(p, target_probability), random.random(), i),
-        items_with_predictions.items())
+    scored = [(prediction_score(i_p[1], target_probability), random.random(), i_p[0]) for i_p in list(items_with_predictions.items())]
     return sorted(scored, reverse=True)[0][2]
 
 
 def recommend_random(items_with_predictions):
-    return random.choice(items_with_predictions.keys())
+    return random.choice(list(items_with_predictions.keys()))
 
 
 class Simulator:
@@ -62,13 +61,13 @@ class Simulator:
 
     def number_of_answers(self):
         if self._number_of_answers is None:
-            result = dict(map(lambda (i, d): (i, 0), self._scenario.difficulties().items()))
+            result = dict([(i_d[0], 0) for i_d in list(self._scenario.difficulties().items())])
             def _reducer(acc, i):
                 acc[i] += 1
                 return acc
             reduce(
                 _reducer,
-                map(lambda x: x[0], [x for xs in self.get_practice().values() for x in xs]), result)
+                [x[0] for x in [x for xs in list(self.get_practice().values()) for x in xs]], result)
             self._number_of_answers = result
         return self._number_of_answers
 
@@ -81,9 +80,9 @@ class Simulator:
         result = self._jaccard.get(jaccard_key)
         if result is None:
             jaccard = []
-            for u in xrange(self._scenario.number_of_users()):
-                first_set = set(zip(*baseline.get_practice()[u])[0][:practice_length])
-                second_set = set(zip(*self.get_practice()[u])[0][:practice_length])
+            for u in range(self._scenario.number_of_users()):
+                first_set = set(list(zip(*baseline.get_practice()[u]))[0][:practice_length])
+                second_set = set(list(zip(*self.get_practice()[u]))[0][:practice_length])
                 jaccard.append(len(first_set & second_set) / float(len(first_set | second_set)))
             jaccard_mean, jaccard_std = numpy.mean(jaccard), numpy.std(jaccard)
             result = {'mean': jaccard_mean, 'std': jaccard_std}
@@ -97,9 +96,9 @@ class Simulator:
         if result is None:
             baseline = self._scenario.optimal_simulator()
             intersection = []
-            for u in xrange(self._scenario.number_of_users()):
-                first_set = set(zip(*baseline.get_practice()[u])[0][:practice_length])
-                second_set = set(zip(*self.get_practice()[u])[0][:practice_length])
+            for u in range(self._scenario.number_of_users()):
+                first_set = set(list(zip(*baseline.get_practice()[u]))[0][:practice_length])
+                second_set = set(list(zip(*self.get_practice()[u]))[0][:practice_length])
                 intersection.append(len(first_set & second_set))
             intersection_mean, intersection_std = numpy.mean(intersection), numpy.std(intersection)
             result = {'mean': intersection_mean, 'std': intersection_std}
@@ -152,7 +151,7 @@ class Simulator:
         return directory + '/' + self.hash()
 
     def hash(self):
-        return hashlib.sha1(str(self)).hexdigest()
+        return hashlib.sha1(str(self).encode()).hexdigest()
 
     def _save_practice(self, directory):
         filename = self.filename(directory) + '_practice.json'
@@ -210,17 +209,17 @@ class Simulator:
             str(self._model), self._practice_length, self._train, self._target_probability)
 
     def _get_data(self, practice, practice_length):
-        return [(u, p[0], p[2]) for u, ps in practice.iteritems() for p in ps[:practice_length]]
+        return [(u, p[0], p[2]) for u, ps in practice.items() for p in ps[:practice_length]]
 
     def _simulate(self, storage, practice_length, number_of_users=None, recommend_fun=recommend):
         if len(storage) > 0:
             return
         self._model.reset()
-        for u in xrange(len(self._users)):
+        for u in range(len(self._users)):
             item_ids = set(self._items.keys())
             storage[u] = []
-            for p in xrange(practice_length):
-                predictions = dict(map(lambda i: (i, self._model.predict(u, i)), item_ids))
+            for p in range(practice_length):
+                predictions = dict([(i, self._model.predict(u, i)) for i in item_ids])
                 to_practice = recommend_fun(predictions)
                 real_prediction = self._optimal_model.predict(u, to_practice)
                 correct = numpy.random.uniform(0, 1) < real_prediction
@@ -232,8 +231,8 @@ class Simulator:
 
     def _compute_rmse(self, storage, practice, practice_length):
         if storage.get(practice_length) is None:
-            flat_practice = [x for xs in practice.values() for x in xs[:practice_length]]
-            storage[practice_length] = rmse(zip(*flat_practice)[1], zip(*flat_practice)[2])
+            flat_practice = [x for xs in list(practice.values()) for x in xs[:practice_length]]
+            storage[practice_length] = rmse(list(zip(*flat_practice))[1], list(zip(*flat_practice))[2])
         return storage[practice_length]
 
 

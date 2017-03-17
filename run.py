@@ -55,7 +55,7 @@ def savefig(args, scenario, figure, name):
     filename = scenario.filename(args.destination) + '/' + name + '.' + args.output
     figure.tight_layout()
     figure.savefig(filename, bbox_inches='tight')
-    print ' -- saving', filename
+    print(' -- saving', filename)
     plt.close(figure)
 
 

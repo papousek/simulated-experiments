@@ -3,15 +3,16 @@ import hashlib
 from os import path
 import numpy
 import random
-from util import convert_dict
-from model import OptimalModel
-from simulator import Simulator
+from .util import convert_dict
+from .model import OptimalModel
+from .simulator import Simulator
 
 
 def load_scenario(json_file, name, version):
     with open(json_file, 'r') as f:
         scenarios = json.loads(f.read())['scenarios']
-        return Scenario(filter(lambda s: s['name'] == name, scenarios)[0], version=version)
+        return Scenario(list(filter(lambda s: s['name'] == name, scenarios))[0], version=version)
+
 
 class Scenario:
 
@@ -54,7 +55,7 @@ class Scenario:
         return self._optimal_simulator
 
     def config_hash(self):
-        return hashlib.sha1(json.dumps(self._data['config'], sort_keys=True)).hexdigest()
+        return hashlib.sha1(json.dumps(self._data['config'], sort_keys=True).encode()).hexdigest()
 
     def parameter(self, simulator_key, parameter_name):
         return self._data['config']['parameters'][simulator_key][parameter_name]
@@ -98,7 +99,7 @@ class Scenario:
                         storage[key] = convert_dict(storage[key], int, float)
                 for key in ['skills']:
                     if key in storage:
-                        storage[key] = convert_dict(storage[key], int, lambda xs: map(float, list(xs)))
+                        storage[key] = convert_dict(storage[key], int, lambda xs: list(map(float, list(xs))))
                 for key in ['clusters']:
                     if key in storage:
                         storage[key] = convert_dict(storage[key], int, int)
@@ -106,7 +107,7 @@ class Scenario:
     def save(self, directory):
         with open(self.filename(directory) + '.json', 'w') as f:
             json.dump(self._data, f)
-        for simulator in self._simulators.values():
+        for simulator in list(self._simulators.values()):
             simulator.save(self.filename(directory))
         if self._optimal_simulator is not None:
             self._optimal_simulator.save(self.filename(directory))
@@ -136,7 +137,7 @@ class Scenario:
         if 'clusters' not in storage:
             number_of_items = self.number_of_items()
             number_of_clusters = self.number_of_clusters()
-            storage['clusters'] = dict(map(lambda i: (i, random.choice(range(number_of_clusters))), range(number_of_items)))
+            storage['clusters'] = dict([(i, random.choice(list(range(number_of_clusters)))) for i in range(number_of_items)])
         return storage['clusters']
 
     def _difficulties(self, storage):
@@ -144,7 +145,7 @@ class Scenario:
             number_of_items = int(self._data['config']['number_of_items'])
             difficulty_mean = float(self._data['config']['difficulty']['mean'])
             difficulty_std = float(self._data['config']['difficulty']['std'])
-            storage['difficulties'] = dict(map(lambda i: (i, numpy.random.normal(difficulty_mean, difficulty_std)), range(number_of_items)))
+            storage['difficulties'] = dict([(i, numpy.random.normal(difficulty_mean, difficulty_std)) for i in range(number_of_items)])
         return storage['difficulties']
 
     def _skills(self, storage):
@@ -155,7 +156,5 @@ class Scenario:
                 for skill in self._data['config']['skills']:
                     skills.append(numpy.random.normal(float(skill['mean']), float(skill['std'])))
                 return skills
-            storage['skills'] = dict(map(
-                lambda u: (u, _skill()),
-                range(number_of_users)))
+            storage['skills'] = dict([(u, _skill()) for u in range(number_of_users)])
         return storage['skills']
