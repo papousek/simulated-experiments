@@ -1,8 +1,8 @@
 from argparse import ArgumentParser
 from os import path, makedirs
 import proso.scenario
-from proso.model import *
-from proso.plots import *
+from proso.model import ClusterEloModel, NaiveModel, ConstantModel
+from proso.plots import plot_intersection, plot_rmse_complex, plot_number_of_answers_per_difficulty, plot_noise_vs_intersection_number_of_answers, plot_number_of_answers_distribution
 import matplotlib.pyplot as plt
 
 
@@ -34,7 +34,7 @@ def parser_init():
         '--output',
         metavar='EXT',
         dest='output',
-        default='png',
+        default='svg',
         help='extension for the output fles')
     parser.add_argument(
         '--skip-groups',
@@ -49,14 +49,14 @@ def parser_init():
     return parser
 
 
-def savefig(args, scenario, figure, name):
+def savefig(args, scenario, name):
     if not path.exists(scenario.filename(args.destination)):
         makedirs(scenario.filename(args.destination))
     filename = scenario.filename(args.destination) + '/' + name + '.' + args.output
-    figure.tight_layout()
-    figure.savefig(filename, bbox_inches='tight')
+    plt.tight_layout()
+    plt.savefig(filename, bbox_inches='tight')
     print(' -- saving', filename)
-    plt.close(figure)
+    plt.close()
 
 
 def main():
@@ -66,17 +66,8 @@ def main():
     scenario = proso.scenario.load_scenario(args.settings, args.name, VERSION)
     scenario.load(args.destination)
 
-    users = scenario.skills()
-    items = scenario.difficulties()
     clusters = scenario.clusters()
 
-    models = {
-        'Elo': ClusterEloModel(scenario, clusters={}),
-        'Elo, Concepts': ClusterEloModel(scenario, clusters=clusters),
-        'Elo, Concepts (wrong)': ClusterEloModel(scenario, clusters=clusters, number_of_items_with_wrong_cluster=scenario.number_of_items_with_wrong_cluster()),
-        'Naive': NaiveModel(),
-        'Constant': ConstantModel(constant=scenario.target_probability())
-    }
     simulators = {
         'Optimal': scenario.optimal_simulator(),
         'Elo': scenario.init_simulator(args.destination, ClusterEloModel(scenario, clusters={})),
@@ -86,42 +77,22 @@ def main():
         'Constant': scenario.init_simulator(args.destination, ConstantModel(constant=scenario.target_probability()))
     }
     if args.skip_groups is None or 'common' not in args.skip_groups:
-        fig = plt.figure()
-        savefig(args, scenario, plot_intersection(fig, scenario, simulators), 'intersection')
-        fig = plt.figure()
-        savefig(args, scenario, plot_rmse_complex(fig, scenario, simulators), 'rmse_complex')
-        fig = plt.figure()
-        savefig(args, scenario, plot_number_of_answers_per_difficulty(fig, scenario, simulators), 'number_of_answers')
-        #fig = plt.figure()
-        #savefig(args, scenario, plot_scenario(fig, scenario), 'scenario')
-    #if args.skip_groups is None or 'target_prob' not in args.skip_groups:
-        #fig = plt.figure()
-        #savefig(args, scenario, plot_target_probability_vs_jaccard_rmse(fig, scenario, args.destination, models), 'target_prob_vs_jaccard_rmse')
+        plot_intersection(scenario, simulators)
+        savefig(args, scenario, 'intersection')
+        plt.gcf().set_size_inches(14, 4)
+        plot_rmse_complex(scenario, simulators)
+        savefig(args, scenario, 'rmse_complex')
+        plt.gcf().set_size_inches(14, 4)
+        plot_number_of_answers_per_difficulty(scenario, simulators),
+        savefig(args, scenario, 'number_of_answers')
+
     if args.skip_groups is None or 'noise' not in args.skip_groups:
-        #fig = plt.figure()
-        #savefig(args, scenario, plot_wrong_clusters_vs_jaccard(fig, scenario, simulators['Optimal'], args.destination), 'wrong_clusters_vs_jaccard')
-        fig = plt.figure()
-        plot_noise_vs_intersection_number_of_answers(fig.add_subplot(121), scenario, simulators['Optimal'], args.destination)
-        plot_number_of_answers_distribution(fig.add_subplot(122), scenario, simulators)
-        fig.set_size_inches(17, 5)
-        savefig(args, scenario, fig, 'noise_vs_intersection_number_of_answers')
-    #if args.skip_groups is None or 'fitting' not in args.skip_groups:
-        #fig = plt.figure()
-        #savefig(args, scenario, plot_model_parameters(
-            #fig,
-            #scenario,
-            #lambda x, y: ClusterEloModel(scenario, clusters={}, alpha=x, dynamic_alpha=y),
-            #('alpha', 0.25, 1.5, 6),
-            #('beta', 0.01, 0.1, 10)
-        #), 'elo_parameters')
-        #fig = plt.figure()
-        #savefig(args, scenario, plot_model_parameters(
-            #fig,
-            #scenario,
-            #lambda x, y: ClusterEloModel(scenario, clusters=clusters, alpha=x, dynamic_alpha=y),
-            #('alpha', 0.25, 1.5, 6),
-            #('beta', 0.01, 0.1, 10)
-        #), 'elo_clusters_parameters')
+        plt.gcf().set_size_inches(14, 4)
+        plt.subplot(121)
+        plot_noise_vs_intersection_number_of_answers(scenario, simulators['Optimal'], args.destination)
+        plt.subplot(122)
+        plot_number_of_answers_distribution(scenario, simulators)
+        savefig(args, scenario, 'noise_vs_intersection_number_of_answers')
     if not args.skip_cache:
         scenario.save(args.destination)
 
